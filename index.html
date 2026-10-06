@@ -366,6 +366,31 @@ ol.steps .mv button:disabled{opacity:.25}
 .srcnote .dot.off{background:var(--faint)}
 .pick{max-height:50vh;overflow:auto;border:1px solid var(--line-soft);border-radius:10px;margin-top:8px}
 
+/* 資料の読み取り */
+.impopts{display:grid;gap:10px}
+.impopt{display:block;text-align:left;width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:var(--card)}
+button.impopt:hover{background:var(--card-2)}
+.impopt b{display:block;font-size:15px}
+.impopt span{display:block;font-size:12.5px;color:var(--muted)}
+.impgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.impcnt{border:1px solid var(--line-soft);border-radius:10px;padding:8px 10px;background:var(--card-2);min-width:0}
+.impcnt b{font-size:12px;color:var(--muted);margin-right:6px}
+.impcnt .mono{font-weight:600}
+.impcnt.zero{opacity:.5}
+.impcnt .pv{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere;line-height:1.5}
+.impmode{display:grid;gap:6px;margin:4px 0 10px;font-size:14px}
+.impmode input{accent-color:var(--acc);margin-right:6px}
+@media (max-width:420px){ .impgrid{grid-template-columns:1fr} }
+.latexnote{display:flex;gap:10px;align-items:flex-start;background:var(--acc-soft);border-radius:10px;padding:10px 12px;margin:0 0 10px;cursor:pointer}
+.latexnote input{width:18px;height:18px;accent-color:var(--acc);margin-top:2px;flex:none}
+.latexnote b{display:block;font-size:13.5px;color:var(--acc-ink)}
+.latexnote small{display:block;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.warnbox{background:var(--warn-soft)!important}
+.warnbox dt{color:var(--warn)!important}
+.srcrow{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 16px;border-top:1px solid var(--line-soft)}
+.srcrow:first-child{border-top:0}
+.srcrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+
 /* iOS Safari は 16px 未満の入力欄にフォーカスすると画面を拡大するので、入力欄はすべて 16px 以上 */
 input,select,textarea{font-size:16px!important}
 .form,.fld,.panel{min-width:0;max-width:100%}
@@ -449,6 +474,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <input type="file" id="labFile" accept="application/json,.json" hidden>
 <input type="file" id="photoFile" accept="image/*" multiple hidden>
+<input type="file" id="docFile" accept=".docx,.pdf,.txt,.md,.markdown,.tex,.html,.htm,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/html" hidden>
 <div class="lightbox" id="lightbox" hidden><button class="x" data-lb="close" aria-label="閉じる">✕</button><img id="lbImg" alt=""></div>
 
 <script>
@@ -497,6 +523,7 @@ function normalize(d){
     });
     b.maint.forEach(function(m){ if(!Array.isArray(m.history)) m.history = []; });
     b.logs.forEach(function(l){ if(!Array.isArray(l.photos)) l.photos = []; });
+    if(!Array.isArray(b.sources)) b.sources = [];
   });
   delete d.files;
   return d;
@@ -559,6 +586,9 @@ var I = {
   wrench:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17a1.4 1.4 0 0 0 2 2l5.2-5.2a4 4 0 0 0 5.3-5.3l-2.4 2.4-2-2z"/></svg>',
   copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
   camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5M9 13h6M9 16.5h4"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
   ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
 };
 
@@ -883,12 +913,14 @@ function buildForm(b){
       { k:'targetDate', label:'完成させたい日', type:'date', w:'half' },
       { k:'doneDate', label:'完成日（稼働を始めた日）', type:'date', w:'half', hint:'メンテナンスの周期はこの日から数えます' },
       { k:'url', label:'参考ページ・リポジトリ', type:'url', w:'half' },
+      { k:'safety', label:'安全上の注意', type:'textarea', rows:2, ph:'電源を抜いてから作業、塗装は換気する など' },
+      { k:'notes', label:'備考', type:'textarea', rows:2 },
       isNew ? { k:'tpl', label:'種類に合わせたひな形（手順・道具・仕様の項目）を入れる', type:'check', def:true } : null
     ].filter(Boolean),
     onSave: function(v){
       if(isNew){
         var tpl = v.tpl; delete v.tpl;
-        var nb = Object.assign({ id:uid(), specs:[], bom:[], steps:[], sessions:[], maint:[], logs:[], createdAt:new Date().toISOString() }, v);
+        var nb = Object.assign({ id:uid(), specs:[], bom:[], steps:[], sessions:[], maint:[], logs:[], sources:[], createdAt:new Date().toISOString() }, v);
         if(tpl) applyTemplate(nb);
         touch(nb); DB.builds.unshift(nb); save();
         location.hash = '#/b/' + nb.id;
@@ -900,6 +932,7 @@ function buildForm(b){
     onDelete: isNew ? null : function(){
       DB.builds = DB.builds.filter(function(x){ return x !== b; });
       b.logs.forEach(function(l){ l.photos.forEach(dropPhoto); });
+      (b.sources || []).forEach(function(x){ if(x.fileId) dropPhoto(x.fileId); });
       save(); location.hash = '#/'; toast('削除しました');
     },
     delConfirm: '「' + (b ? b.title : '') + '」を削除しますか？ 部品表・段取り・記録・写真もすべて消えます。'
@@ -1246,6 +1279,937 @@ function lightbox(k){
 }
 
 /* ============================================================
+   資料の読み取り（研究デスクと同じ仕組み）
+   Word（.docx）・PDF・テキスト・Markdown・LaTeX・HTML・Google ドキュメント・貼り付けを
+   「ブロック」の列にしてから、見出し・日付・番号・「項目：値」を手がかりに
+   作品の 目的・仕様・部品・工具・手順・作業日（予定）・記録・メンテ・注意・備考 に振り分ける。
+   元のファイルは作品の「元の資料」（b.sources）として IndexedDB に置き、同期する。
+   ============================================================ */
+var PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/';
+var DOCS_SCOPE = 'https://www.googleapis.com/auth/documents.readonly';
+
+/* ---------- 読み取り：形式ごとに「ブロック」の列にする ----------
+   { type:'title'|'h'|'p'|'table', level, text, list, rows } */
+function textBlocks(text, md){
+  var out = [], tbl = null;
+  text.replace(/\r\n?/g, '\n').split('\n').forEach(function(line){
+    var t = line.trim(), m;
+    if(/^\|.*\|$/.test(t)){
+      if(/^\|[\s:\-|]+\|$/.test(t)) return;
+      var cells = t.slice(1, -1).split('|').map(function(c){ return c.trim(); });
+      if(!tbl){ tbl = { type:'table', rows:[] }; out.push(tbl); }
+      tbl.rows.push(cells); return;
+    }
+    tbl = null;
+    if(!t) return;
+    if((m = t.match(/^(#{1,6})\s+(.*)$/))){ out.push({ type: m[1].length === 1 && !out.length ? 'title' : 'h', level:m[1].length, text:m[2] }); return; }
+    if((m = t.match(/^[-*+・•●○■□◆]\s*(.+)$/))){ out.push({ type:'p', text:m[1], list:true }); return; }
+    out.push({ type:'p', text:t });
+  });
+  return out;
+}
+function htmlBlocks(html){
+  var doc = new DOMParser().parseFromString(html, 'text/html'), out = [];
+  doc.querySelectorAll('script,style,noscript').forEach(function(x){ x.remove(); });
+  doc.body.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,table,pre,blockquote').forEach(function(el){
+    var tag = el.tagName.toLowerCase();
+    if(tag !== 'table' && el.closest('table')) return;
+    if(tag === 'p' && el.closest('li')) return;
+    if(tag === 'table'){
+      out.push({ type:'table', rows: Array.prototype.map.call(el.rows, function(r){ return Array.prototype.map.call(r.cells, function(c){ return c.innerText || c.textContent || ''; }); }) });
+      return;
+    }
+    var t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if(!t) return;
+    if(/^h\d$/.test(tag)) out.push({ type: tag === 'h1' && !out.length ? 'title' : 'h', level:+tag[1], text:t });
+    else out.push({ type:'p', text:t, list: tag === 'li' });
+  });
+  return out;
+}
+/* .docx は ZIP。依存ライブラリなしで中の word/document.xml を取り出す */
+function unzip(buf){
+  var dv = new DataView(buf), eocd = -1;
+  for(var i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--){ if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) throw new Error('Word ファイルとして開けません');
+  var count = dv.getUint16(eocd + 10, true), p = dv.getUint32(eocd + 16, true), files = {};
+  for(var k = 0; k < count; k++){
+    var nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    var name = new TextDecoder().decode(new Uint8Array(buf, p + 46, nlen));
+    files[name] = { method: dv.getUint16(p + 10, true), size: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) };
+    p += 46 + nlen + elen + clen;
+  }
+  return {
+    text: function(name){
+      var f = files[name];
+      if(!f) return Promise.resolve('');
+      var start = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true);
+      var data = new Uint8Array(buf, start, f.size);
+      if(f.method === 0) return Promise.resolve(new TextDecoder().decode(data));
+      if(typeof DecompressionStream === 'undefined') return Promise.reject(new Error('このブラウザは Word の読み取りに対応していません（iOS 16.4 以降・最新のブラウザで開いてください）'));
+      return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+    }
+  };
+}
+function docxBlocks(buf){
+  var z = unzip(buf);
+  return Promise.all([z.text('word/document.xml'), z.text('word/styles.xml')]).then(function(r){
+    if(!r[0]) throw new Error('Word の本文が見つかりません');
+    var xml = new DOMParser().parseFromString(r[0], 'application/xml');
+    var styles = {};
+    if(r[1]){
+      var sx = new DOMParser().parseFromString(r[1], 'application/xml');
+      Array.prototype.forEach.call(sx.getElementsByTagName('w:style'), function(s){
+        var nm = s.getElementsByTagName('w:name')[0];
+        styles[s.getAttribute('w:styleId')] = nm ? nm.getAttribute('w:val') : '';
+      });
+    }
+    var kids = function(el, ln){ return Array.prototype.filter.call(el.childNodes, function(c){ return c.localName === ln; }); };
+    var ptext = function(pEl){
+      var s = '';
+      Array.prototype.forEach.call(pEl.getElementsByTagName('*'), function(n){
+        if(n.localName === 't') s += n.textContent;
+        else if(n.localName === 'tab') s += ' ';
+        else if(n.localName === 'br' || n.localName === 'cr') s += '\n';
+      });
+      return s;
+    };
+    var out = [];
+    var walk = function(node){
+      Array.prototype.forEach.call(node.childNodes, function(el){
+        var ln = el.localName;
+        if(ln === 'p'){
+          var t = ptext(el).trim();
+          if(!t) return;
+          var pPr = kids(el, 'pPr')[0], sid = '', lvl = 0, isList = false;
+          if(pPr){
+            var ps = kids(pPr, 'pStyle')[0]; if(ps) sid = ps.getAttribute('w:val') || '';
+            var ol = kids(pPr, 'outlineLvl')[0]; if(ol) lvl = +ol.getAttribute('w:val') + 1;
+            isList = kids(pPr, 'numPr').length > 0;
+          }
+          var sname = (styles[sid] || sid || '').toLowerCase(), m;
+          if(/^(title|表題)$/.test(sname)) out.push({ type:'title', text:t });
+          else if((m = sname.match(/heading\s*(\d)|見出し\s*(\d)/))) out.push({ type:'h', level: +(m[1] || m[2]), text:t });
+          else if(lvl) out.push({ type:'h', level:lvl, text:t });
+          else out.push({ type:'p', text:t, list: isList || /list/.test(sname) });
+        }else if(ln === 'tbl'){
+          out.push({ type:'table', rows: kids(el, 'tr').map(function(tr){
+            return kids(tr, 'tc').map(function(tc){ return kids(tc, 'p').map(ptext).join('\n').trim(); });
+          }) });
+        }else if(ln === 'sdt'){
+          var c = kids(el, 'sdtContent')[0]; if(c) walk(c);
+        }
+      });
+    };
+    walk(xml.getElementsByTagName('w:body')[0]);
+    return out;
+  });
+}
+/* PDF は pdf.js を、使うときだけ読み込む（日本語用の CMap も） */
+var pdfReady = null;
+function loadPdfjs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(!pdfReady) pdfReady = new Promise(function(res, rej){
+    var s = document.createElement('script');
+    s.src = PDFJS + 'build/pdf.min.js';
+    s.onload = function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'build/pdf.worker.min.js'; res(window.pdfjsLib); };
+    s.onerror = function(){ pdfReady = null; rej(new Error('PDF の読み取り機能を読み込めませんでした（オンラインで試してください）')); };
+    document.head.appendChild(s);
+  });
+  return pdfReady;
+}
+function pdfBlocks(buf){
+  return loadPdfjs().then(function(lib){
+    return lib.getDocument({ data:new Uint8Array(buf), cMapUrl: PDFJS + 'cmaps/', cMapPacked:true }).promise;
+  }).then(function(pdf){
+    var pages = [];
+    for(var i = 1; i <= Math.min(pdf.numPages, 60); i++) pages.push(i);
+    return Promise.all(pages.map(function(n){ return pdf.getPage(n).then(function(pg){ return pg.getTextContent(); }); }));
+  }).then(function(contents){
+    var all = [];
+    contents.forEach(function(tc){
+      var items = tc.items.filter(function(it){ return it.str && it.str.trim(); }).map(function(it){
+        return { s:it.str, x:it.transform[4], y:it.transform[5], size: Math.abs(it.transform[3]) || Math.hypot(it.transform[0], it.transform[1]) || it.height || 10, w:it.width };
+      }).sort(function(a, b){ return Math.abs(b.y - a.y) > Math.min(a.size, b.size) * 0.4 ? b.y - a.y : a.x - b.x; });
+      var cur = null;
+      items.forEach(function(it){
+        if(cur && Math.abs(cur.y - it.y) <= Math.min(cur.size, it.size) * 0.4){
+          var gap = it.x - cur.xe;
+          cur.text += (gap > cur.size * 0.6 ? ' ' : '') + it.s; cur.xe = it.x + it.w; cur.size = Math.max(cur.size, it.size);
+        }else{
+          cur = { text:it.s, y:it.y, x:it.x, xe:it.x + it.w, size:it.size, gapBefore: cur ? cur.y - it.y : 99 };
+          all.push(cur);
+        }
+      });
+    });
+    if(!all.length) throw new Error('文字が見つかりません（画像だけの PDF は読めません）');
+    var sizes = all.map(function(l){ return l.size; }).sort(function(a, b){ return a - b; }), med = sizes[Math.floor(sizes.length / 2)];
+    var out = [], NUMLIKE = /^\s*([0-9０-９]{1,2}[.．、)）]|[①-⑳]|[-・•●■□◆]|手順\s*[0-9０-９])/;
+    all.forEach(function(l, i){
+      /* 日本語 PDF は「黒」「立」が康熙部首（⿊ ⽴）で出てくることがあるので、ふつうの漢字に直す */
+      var t = l.text.replace(/[⺀-⿟豈-﫿]/g, function(c){ var n = c.normalize('NFKC'); return { '黑':'黒', '靑':'青', '黃':'黄', '齒':'歯', '齊':'斉' }[n] || n; }).replace(/\s+/g, ' ').trim();
+      if(!t) return;
+      if(i === 0 && l.size >= med * 1.3 && t.length <= 50){ out.push({ type:'title', text:t }); return; }
+      if(l.size >= med * 1.15 && t.length <= 40){ out.push({ type:'h', level: l.size >= med * 1.4 ? 1 : 2, text:t }); return; }
+      var prev = out[out.length - 1];
+      var wrapped = prev && prev.type === 'p' && !/[。．.!?！？:：]$/.test(prev.text) && !NUMLIKE.test(t) && !/^[^:：]{1,20}[:：]/.test(t) && l.gapBefore < l.size * 1.8;
+      if(wrapped) prev.text += (/[A-Za-z0-9]$/.test(prev.text) && /^[A-Za-z0-9]/.test(t) ? ' ' : '') + t;
+      else out.push({ type:'p', text:t });
+    });
+    return out;
+  });
+}
+function gdocBlocks(doc){
+  var out = [];
+  var ptxt = function(par){ return (par.elements || []).map(function(e){ return e.textRun ? e.textRun.content : ''; }).join('').replace(/\n$/, '').replace(/\u000b/g, '\n'); };
+  var walk = function(content){
+    (content || []).forEach(function(el){
+      if(el.paragraph){
+        var t = ptxt(el.paragraph).trim(), st = (el.paragraph.paragraphStyle || {}).namedStyleType || '', m;
+        if(!t) return;
+        if(st === 'TITLE') out.push({ type:'title', text:t });
+        else if((m = st.match(/^HEADING_(\d)/))) out.push({ type:'h', level:+m[1], text:t });
+        else out.push({ type:'p', text:t, list: !!el.paragraph.bullet });
+      }else if(el.table){
+        out.push({ type:'table', rows: (el.table.tableRows || []).map(function(r){
+          return (r.tableCells || []).map(function(c){ return (c.content || []).map(function(x){ return x.paragraph ? ptxt(x.paragraph) : ''; }).join('\n').trim(); });
+        }) });
+      }
+    });
+  };
+  walk(doc.body && doc.body.content);
+  return out;
+}
+
+
+var NUM_RX = /^\s*(?:(?:手順|ステップ|step|工程)\s*)?(?:[(（]?([0-9０-９]{1,2})[)）.．、:：]|([①-⑳])|([0-9０-９]{1,2})\s+(?=\D))\s*(.*)$/i;
+function numMatch(t){ var m = t.match(NUM_RX); return m && m[4] !== undefined ? { rest: m[4].trim() || t.trim() } : null; }
+function stripBullet(t){ return t.replace(/^\s*[-・•●○■□◆*＊]\s*/, '').trim(); }
+function kvMatch(t){
+  if(/^https?:/i.test(t)) return null;
+  var m = t.match(/^([^:：。]{1,24})[:：]\s*(.+)$/);
+  return m ? { k:m[1].trim(), v:m[2].trim() } : null;
+}
+function splitItems(v){ return /[、,，／]/.test(v) && v.length < 200 ? v.split(/[、,，／]/).map(function(x){ return x.trim(); }).filter(Boolean) : [v]; }
+function mkStep(t){
+  t = t.trim();
+  if(t.length <= 60) return { title:t, body:'' };
+  var cut = t.indexOf('。');
+  if(cut > 0 && cut < 60) return { title:t.slice(0, cut + 1), body:t.slice(cut + 1).trim() };
+  return { title:t.slice(0, 40) + '…', body:t };
+}
+
+/* ---------- 読み取り：LaTeX の記法をふつうの文字に ----------
+   資料に $V_{CC}=5\,\mathrm{V}$ や \SI{3.3}{\volt}、\begin{tabular} などが書かれていると、
+   そのままではコマンドが文字として入ってしまう。読み取りの段階で読める形に変換する。 */
+var TEX_SYM = {
+  alpha:'α', beta:'β', gamma:'γ', delta:'δ', epsilon:'ε', varepsilon:'ε', zeta:'ζ', eta:'η', theta:'θ', vartheta:'θ', iota:'ι', kappa:'κ',
+  lambda:'λ', mu:'μ', nu:'ν', xi:'ξ', pi:'π', rho:'ρ', sigma:'σ', tau:'τ', upsilon:'υ', phi:'φ', varphi:'φ', chi:'χ', psi:'ψ', omega:'ω',
+  Gamma:'Γ', Delta:'Δ', Theta:'Θ', Lambda:'Λ', Xi:'Ξ', Pi:'Π', Sigma:'Σ', Upsilon:'Υ', Phi:'Φ', Psi:'Ψ', Omega:'Ω',
+  times:'×', pm:'±', mp:'∓', cdot:'·', div:'÷', leq:'≤', le:'≤', leqq:'≦', geq:'≥', ge:'≥', geqq:'≧', neq:'≠', ne:'≠', approx:'≈', simeq:'≃', sim:'〜',
+  equiv:'≡', propto:'∝', infty:'∞', partial:'∂', nabla:'∇', sum:'Σ', prod:'Π', int:'∫', oint:'∮',
+  rightarrow:'→', to:'→', leftarrow:'←', gets:'←', Rightarrow:'⇒', Leftarrow:'⇐', Leftrightarrow:'⇔', leftrightarrow:'↔', uparrow:'↑', downarrow:'↓', mapsto:'↦',
+  ldots:'…', cdots:'⋯', dots:'…', vdots:'⋮', angle:'∠', perp:'⊥', parallel:'∥', in:'∈', notin:'∉', subset:'⊂', supset:'⊃', cup:'∪', cap:'∩',
+  forall:'∀', exists:'∃', therefore:'∴', because:'∵', neg:'¬', land:'∧', lor:'∨', checkmark:'✓', prime:'′', ell:'ℓ', hbar:'ℏ', Re:'ℜ', Im:'ℑ',
+  degree:'°', textdegree:'°', circ:'°', celsius:'℃', textcelsius:'℃', degreeCelsius:'℃', ohm:'Ω', micro:'µ', textmu:'µ', textperthousand:'‰',
+  LaTeX:'LaTeX', TeX:'TeX', textasciitilde:'~', textbackslash:'\\', textbar:'|', textless:'<', textgreater:'>', S:'§', P:'¶', dag:'†', ddag:'‡',
+  copyright:'©', textregistered:'®', texttrademark:'™', bullet:'•', textbullet:'•', quad:'  ', qquad:'    ', enspace:' ', thinspace:' ', space:' ', newline:'\n', par:'\n',
+  lbrace:'{', rbrace:'}', langle:'⟨', rangle:'⟩', lfloor:'⌊', rfloor:'⌋', lceil:'⌈', rceil:'⌉', vert:'|', Vert:'‖', backslash:'\\', setminus:'∖', emptyset:'∅'
+};
+var TEX_UNIT = {
+  volt:'V', ampere:'A', amp:'A', ohm:'Ω', watt:'W', hertz:'Hz', second:'s', meter:'m', metre:'m', gram:'g', kilogram:'kg', newton:'N', pascal:'Pa',
+  joule:'J', coulomb:'C', farad:'F', henry:'H', weber:'Wb', tesla:'T', siemens:'S', kelvin:'K', celsius:'℃', degreeCelsius:'℃', degree:'°', percent:'%',
+  liter:'L', litre:'L', minute:'min', hour:'h', day:'d', decibel:'dB', lux:'lx', lumen:'lm', candela:'cd', mole:'mol', byte:'B', bit:'bit', rpm:'rpm',
+  bar:'bar', mmHg:'mmHg', electronvolt:'eV', angstrom:'Å',
+  kilo:'k', mega:'M', giga:'G', tera:'T', milli:'m', micro:'µ', nano:'n', pico:'p', femto:'f', centi:'c', deci:'d', hecto:'h'
+};
+var TEX_WRAP = /^(textbf|textit|textrm|textsf|texttt|textsc|textup|textmd|textnormal|emph|underline|uline|overline|mbox|hbox|fbox|text|mathrm|mathbf|mathit|mathsf|mathtt|mathcal|mathbb|mathfrak|boldsymbol|bm|operatorname|ensuremath|textsuperscript|textsubscript|caption|title|author|date|section|subsection|subsubsection|paragraph|chapter|centerline|small|tiny|large|Large|LARGE|huge|Huge|footnotesize|scriptsize|normalsize|color|textcolor|colorbox|ruby)$/;
+var TEX_DROP = /^(label|index|vspace|hspace|phantom|hphantom|vphantom|usepackage|documentclass|newcommand|renewcommand|providecommand|setlength|addtolength|pagestyle|thispagestyle|bibliographystyle|bibliography|maketitle|tableofcontents|listoffigures|listoftables|centering|raggedright|raggedleft|noindent|indent|newpage|clearpage|pagebreak|linebreak|nopagebreak|bfseries|itshape|ttfamily|rmfamily|sffamily|mdseries|upshape|normalfont|hline|toprule|midrule|bottomrule|cline|cmidrule|addlinespace|left|right|big|Big|bigg|Bigg|bigl|bigr|Bigl|Bigr|displaystyle|textstyle|scriptstyle|limits|nolimits|nonumber|notag|protect|relax|smallskip|medskip|bigskip|vfill|hfill|null|strut|item|begin|end|footnotemark|graphicspath|geometry|lstset|definecolor|setcounter|addcontentsline)$/;
+/* \, \; などの 1 文字コマンド。\\ は改行、\( \) \[ \] は数式の区切りなので消す */
+var TEX_ESC = { ',':' ', ';':' ', ':':' ', ' ':' ', '>':' ', '!':'', '-':'', '\\':'\n', '/':'', '(':'', ')':'', '[':'', ']':'' };
+var SUP_MAP = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻','−':'⁻','=':'⁼','(':'⁽',')':'⁾','n':'ⁿ','i':'ⁱ' };
+var SUB_MAP = { '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','+':'₊','-':'₋','=':'₌','(':'₍',')':'₎' };
+
+function texArg(s, i){
+  /* i から空白を飛ばし、{…} があれば中身と終わりの位置を返す（入れ子に対応） */
+  var j = i;
+  while(j < s.length && (s[j] === ' ' || s[j] === '\t')) j++;
+  if(s[j] !== '{') return null;
+  var depth = 0;
+  for(var k = j; k < s.length; k++){
+    if(s[k] === '\\'){ k++; continue; }
+    if(s[k] === '{') depth++;
+    else if(s[k] === '}'){ depth--; if(!depth) return { arg: s.slice(j + 1, k), end: k + 1 }; }
+  }
+  return { arg: s.slice(j + 1), end: s.length };
+}
+function texOpt(s, i){
+  var j = i;
+  while(j < s.length && s[j] === ' ') j++;
+  if(s[j] !== '[') return null;
+  var k = s.indexOf(']', j);
+  return k < 0 ? null : { arg: s.slice(j + 1, k), end: k + 1 };
+}
+function texSup(a){
+  if(a === '°' || a === '\\circ') return '°';
+  if(a === '\'' || a === '′') return '′';
+  if(a && a.split('').every(function(c){ return SUP_MAP[c]; })) return a.split('').map(function(c){ return SUP_MAP[c]; }).join('');
+  return '^' + (a.length > 1 ? '(' + a + ')' : a);
+}
+function texSub(a){
+  if(a && a.split('').every(function(c){ return SUB_MAP[c]; })) return a.split('').map(function(c){ return SUB_MAP[c]; }).join('');
+  return '_' + (/^[A-Za-z0-9]+$/.test(a) ? a : '(' + a + ')');
+}
+function texUnit(u){
+  /* siunitx の単位：\milli\ampere → mA、\meter\per\second\squared → m/s² */
+  var out = '', pow = '';
+  (u.match(/\\[a-zA-Z]+|[^\\]+/g) || []).forEach(function(tok){
+    if(tok[0] !== '\\'){ out += texConv(tok) + pow; pow = ''; return; }
+    var nm = tok.slice(1);
+    if(nm === 'per'){ out += '/'; return; }
+    if(nm === 'square'){ pow = '²'; return; }
+    if(nm === 'cubic'){ pow = '³'; return; }
+    if(nm === 'squared'){ out += '²'; return; }
+    if(nm === 'cubed'){ out += '³'; return; }
+    out += (TEX_UNIT[nm] || TEX_SYM[nm] || nm) + (TEX_UNIT[nm] && !/^(kilo|mega|giga|tera|milli|micro|nano|pico|femto|centi|deci|hecto)$/.test(nm) ? pow : '');
+    if(TEX_UNIT[nm] && !/^(kilo|mega|giga|tera|milli|micro|nano|pico|femto|centi|deci|hecto)$/.test(nm)) pow = '';
+  });
+  return out.replace(/\s+/g, '');
+}
+function texNum(n){ return texConv(n).replace(/([0-9.]+)\s*[eE]\s*([+-]?\d+)/g, function(_, m, e){ return m + '×10' + texSup(String(+e)); }); }
+
+/* 1 つの文字列の中のコマンドを変換する（$…$ の中も外も同じ扱い） */
+function texConv(s){
+  var out = '', i = 0, m, a, b, o;
+  while(i < s.length){
+    var c = s[i];
+    if(c === '\\'){
+      m = s.slice(i + 1).match(/^([a-zA-Z@]+)\*?|^([\s\S])/);
+      if(!m){ i++; continue; }
+      if(m[2] !== undefined){
+        i += 2;
+        var ch = m[2];
+        out += TEX_ESC[ch] !== undefined ? TEX_ESC[ch] : ch;
+        continue;
+      }
+      var name = m[1];
+      i += 1 + m[0].length;
+      if(name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac'){
+        a = texArg(s, i); b = a && texArg(s, a.end);
+        if(a && b){
+          var x = texConv(a.arg), y = texConv(b.arg), wrap = function(t){ t = t.trim(); return t.length > 1 && !/^[0-9.]+$/.test(t) && !/^\(.*\)$/.test(t) && !/^[A-Za-zα-ωΑ-Ω]((_[A-Za-z0-9]+)|[₀-₉]+)?$/.test(t) ? '(' + t + ')' : t; };
+          out += wrap(x) + '/' + wrap(y); i = b.end;
+        }
+        continue;
+      }
+      if(name === 'sqrt'){
+        o = texOpt(s, i); if(o) i = o.end;
+        a = texArg(s, i);
+        if(a){ var r = texConv(a.arg).trim(); out += (o ? texSup(o.arg) : '') + '√' + (r.length > 1 ? '(' + r + ')' : r); i = a.end; }
+        else out += '√';
+        continue;
+      }
+      if(name === 'SI' || name === 'qty' || name === 'SIrange' || name === 'qtyrange' || name === 'si' || name === 'unit' || name === 'num' || name === 'ang' || name === 'numrange'){
+        o = texOpt(s, i); if(o) i = o.end;
+        var args = [];
+        var need = { SI:2, qty:2, SIrange:3, qtyrange:3, si:1, unit:1, num:1, ang:1, numrange:2 }[name];
+        for(var k = 0; k < need; k++){ a = texArg(s, i); if(!a) break; args.push(a.arg); i = a.end; }
+        if(name === 'SI' || name === 'qty') out += texNum(args[0] || '') + ' ' + texUnit(args[1] || '');
+        else if(name === 'SIrange' || name === 'qtyrange') out += texNum(args[0] || '') + '〜' + texNum(args[1] || '') + ' ' + texUnit(args[2] || '');
+        else if(name === 'numrange') out += texNum(args[0] || '') + '〜' + texNum(args[1] || '');
+        else if(name === 'si' || name === 'unit') out += texUnit(args[0] || '');
+        else if(name === 'num') out += texNum(args[0] || '');
+        else out += texConv(args[0] || '') + '°';
+        continue;
+      }
+      if(name === 'multicolumn' || name === 'multirow'){
+        a = texArg(s, i); b = a && texArg(s, a.end); var cc = b && texArg(s, b.end);
+        if(cc){ out += texConv(cc.arg); i = cc.end; }
+        continue;
+      }
+      if(name === 'href'){ a = texArg(s, i); b = a && texArg(s, a.end); if(b){ out += texConv(b.arg) + '（' + a.arg + '）'; i = b.end; } continue; }
+      if(name === 'url' || name === 'path' || name === 'verb'){ a = texArg(s, i); if(a){ out += a.arg; i = a.end; } continue; }
+      if(name === 'ref' || name === 'eqref' || name === 'autoref' || name === 'cref' || name === 'Cref'){ a = texArg(s, i); if(a){ out += name === 'eqref' ? '(' + a.arg + ')' : a.arg; i = a.end; } continue; }
+      if(name === 'cite' || name === 'citep' || name === 'citet'){ o = texOpt(s, i); if(o) i = o.end; a = texArg(s, i); if(a){ out += '[' + a.arg + ']'; i = a.end; } continue; }
+      if(name === 'footnote'){ a = texArg(s, i); if(a){ out += '（' + texConv(a.arg) + '）'; i = a.end; } continue; }
+      if(name === 'includegraphics'){ o = texOpt(s, i); if(o) i = o.end; a = texArg(s, i); if(a) i = a.end; out += '［図］'; continue; }
+      if(name === 'textcolor' || name === 'colorbox'){ a = texArg(s, i); if(a){ i = a.end; b = texArg(s, i); if(b){ out += texConv(b.arg); i = b.end; } } continue; }
+      if(name === 'color'){ a = texArg(s, i); if(a) i = a.end; continue; }
+      if(name === 'ruby'){ a = texArg(s, i); b = a && texArg(s, a.end); if(b){ out += texConv(a.arg); i = b.end; } continue; }
+      if(name === 'overset' || name === 'underset' || name === 'stackrel'){ a = texArg(s, i); b = a && texArg(s, a.end); if(b){ out += texConv(b.arg); i = b.end; } continue; }
+      if(name === 'mathrm' || name === 'text' || name === 'operatorname' || TEX_WRAP.test(name)){
+        o = texOpt(s, i); if(o && name !== 'text') i = o.end;
+        a = texArg(s, i);
+        if(a){ out += texConv(a.arg); i = a.end; }
+        continue;
+      }
+      /* LaTeX ではコマンド名の直後の空白は無視される（5\times 10 → 5×10） */
+      if(TEX_SYM[name] !== undefined){ out += TEX_SYM[name]; if(s[i] === ' ' && /[A-Za-z0-9]/.test(s[i + 1] || '')) i++; continue; }
+      if(TEX_DROP.test(name)){
+        if(/^(begin|end|cline|cmidrule|usepackage|documentclass|setlength|addtolength|pagestyle|thispagestyle|label|index|vspace|hspace|phantom|hphantom|vphantom|bibliographystyle|bibliography|graphicspath|geometry|lstset|setcounter|definecolor|addcontentsline)$/.test(name)){
+          o = texOpt(s, i); if(o) i = o.end;
+          while((a = texArg(s, i))) { i = a.end; if(!/^(newcommand|definecolor|setlength|addcontentsline|setcounter)$/.test(name)) break; }
+          if(/^(cmidrule)$/.test(name)){ var pr = s.slice(i).match(/^\s*\([^)]*\)/); if(pr) i += pr[0].length; }
+        }
+        if(name === 'item'){ o = texOpt(s, i); if(o){ out += texConv(o.arg) + '：'; i = o.end; } }
+        continue;
+      }
+      /* 知らないコマンド：引数があれば中身だけ残す */
+      a = texArg(s, i);
+      if(a){ out += texConv(a.arg); i = a.end; }
+      continue;
+    }
+    if(c === '^' || c === '_'){
+      i++;
+      if(s[i] === '{'){ a = texArg(s, i); out += (c === '^' ? texSup : texSub)(texConv(a.arg).trim()); i = a.end; }
+      else if(s[i] === '\\'){ m = s.slice(i + 1).match(/^[a-zA-Z]+/); var sym = m ? texConv('\\' + m[0]) : ''; out += c === '^' ? texSup(sym) : texSub(sym); i += 1 + (m ? m[0].length : 0); }
+      else if(i < s.length){ out += (c === '^' ? texSup : texSub)(s[i]); i++; }
+      continue;
+    }
+    if(c === '$'){ i++; continue; }
+    if(c === '{' || c === '}'){ i++; continue; }
+    if(c === '~'){ out += /\d/.test(s[i - 1] || '') && /\d/.test(s[i + 1] || '') ? '〜' : ' '; i++; continue; }
+    out += c; i++;
+  }
+  return out;
+}
+/* 文字列に LaTeX らしい書き方があるときだけ変換する（ふつうの文章の % や ~ は触らない） */
+var TEX_HINT = /\\[a-zA-Z]{2,}|\\[,;:!%&_#$]|\$[^$\n]+\$|\\\(|\\\[|\^\{|_\{/;
+function latexToText(t){
+  t = String(t == null ? '' : t);
+  if(!TEX_HINT.test(t)) return t;
+  return texConv(t).replace(/[ \t\u00a0]{2,}/g, ' ').replace(/ ?\n ?/g, '\n').trim();
+}
+function looksLikeLatexSource(t){
+  return /\\documentclass|\\begin\{document\}/.test(t) || ((t.match(/\\(section|subsection|begin\{(itemize|enumerate|tabular|description)\}|item\b)/g) || []).length >= 3);
+}
+/* LaTeX のソース（または \begin…\end のまとまり）を見出し・箇条書き・表のブロックにする */
+function latexBlocks(src){
+  var s = String(src).replace(/\r\n?/g, '\n').replace(/(^|[^\\])%.*$/gm, '$1');
+  var out = [], title = (s.match(/\\title\s*\{([^{}]*)\}/) || [])[1];
+  var bd = s.indexOf('\\begin{document}');
+  if(bd >= 0){ s = s.slice(bd + 16); var ed = s.indexOf('\\end{document}'); if(ed >= 0) s = s.slice(0, ed); }
+  if(title) out.push({ type:'title', text: latexToText(title) || title });
+  /* 表を先に取り出して印に置き換える */
+  var tables = [];
+  s = s.replace(/\\begin\{(tabular\*?|tabularx|tabulary|longtable|array)\}/g, '\u0001$1\u0001');
+  var parts = s.split('\u0001'), rebuilt = parts[0];
+  for(var pi = 1; pi + 1 < parts.length; pi += 2){
+    var env = parts[pi], rest = parts[pi + 1], endTag = '\\end{' + env + '}', endAt = rest.indexOf(endTag);
+    var body = endAt >= 0 ? rest.slice(0, endAt) : rest, after = endAt >= 0 ? rest.slice(endAt + endTag.length) : '';
+    var nargs = /^(tabular\*|tabularx|tabulary)$/.test(env) ? 2 : 1, p0 = 0, op = texOpt(body, 0);
+    if(op) p0 = op.end;
+    for(var k = 0; k < nargs; k++){ var ag = texArg(body, p0); if(ag) p0 = ag.end; }
+    body = body.slice(p0).replace(/\\(hline|toprule|midrule|bottomrule|endhead|endfirsthead|endfoot|endlastfoot)\b/g, '').replace(/\\(cline|cmidrule)(\([^)]*\))?\{[^}]*\}/g, '');
+    var rows = body.replace(/\\&/g, '\u0002').split(/\\\\(?:\s*\[[^\]]*\])?/).map(function(row){
+      return row.split('&').map(function(cell){ return latexToText(cell.replace(/\u0002/g, '\\&').trim()); });
+    }).filter(function(r){ return r.some(Boolean); });
+    tables.push({ type:'table', rows: rows });
+    rebuilt += '\n\u0003' + (tables.length - 1) + '\u0003\n' + after;
+  }
+  s = rebuilt;
+  /* 見出し・\item・環境の区切りを行の先頭にそろえる */
+  s = s.replace(/\\(chapter|section|subsection|subsubsection|paragraph|item|begin|end)\b/g, '\n\\$1');
+  var lists = [], cur = null, para = [];
+  var flush = function(){
+    if(cur){ var t = latexToText(cur.text); if(t) out.push({ type:'p', text:t, list:true }); cur = null; }
+    if(para.length){
+      var tt = latexToText(para.join('\n').replace(/([^\n])\n(?=[^\n])/g, function(_, x){ return /[A-Za-z0-9,.]$/.test(x) ? x + ' ' : x; }));
+      tt.split('\n').map(function(x){ return x.trim(); }).filter(Boolean).forEach(function(x){ out.push({ type:'p', text:x }); });
+      para = [];
+    }
+  };
+  var mathEnv = null, mathBuf = [];
+  s.split('\n').forEach(function(line){
+    var t = line.trim(), m, a;
+    if(mathEnv){
+      if(t.indexOf('\\end{' + mathEnv + '}') >= 0){ var mt = latexToText(mathBuf.join(' ').replace(/\\\\/g, '\n').replace(/&/g, '')); mt.split('\n').forEach(function(x){ x = x.trim(); if(x) out.push({ type:'p', text:x }); }); mathEnv = null; mathBuf = []; }
+      else mathBuf.push(t);
+      return;
+    }
+    if((m = t.match(/^\u0003(\d+)\u0003$/))){ flush(); out.push(tables[+m[1]]); return; }
+    if(!t){ if(!cur) flush(); return; }
+    if((m = t.match(/^\\(chapter|section|subsection|subsubsection|paragraph)\*?/))){
+      flush();
+      a = texArg(t, m[0].length);
+      var lv = { chapter:1, section:1, subsection:2, subsubsection:3, paragraph:4 }[m[1]];
+      if(a){ out.push({ type:'h', level:lv, text: latexToText(a.arg) || a.arg }); var rest2 = t.slice(a.end).trim(); if(rest2) para.push(rest2); }
+      return;
+    }
+    if((m = t.match(/^\\begin\{([a-zA-Z*]+)\}/))){
+      var env2 = m[1].replace(/\*$/, '');
+      if(/^(itemize|enumerate|description|compactitem|compactenum)$/.test(env2)){ flush(); lists.push({ type:env2, n:0 }); }
+      else if(/^(equation|align|gather|multline|eqnarray|displaymath|math)$/.test(env2)){ flush(); mathEnv = m[1]; var inl = t.slice(m[0].length); if(inl.trim()) mathBuf.push(inl); }
+      var r3 = t.slice(m[0].length).replace(/^\s*(\[[^\]]*\]|\{[^{}]*\})*/, '').trim();
+      if(r3 && !mathEnv) para.push(r3);
+      return;
+    }
+    if((m = t.match(/^\\end\{([a-zA-Z*]+)\}/))){
+      var env3 = m[1].replace(/\*$/, '');
+      if(/^(itemize|enumerate|description|compactitem|compactenum)$/.test(env3)){ flush(); lists.pop(); }
+      var r4 = t.slice(m[0].length).trim(); if(r4) para.push(r4);
+      return;
+    }
+    if((m = t.match(/^\\item\b/))){
+      flush();
+      var L = lists[lists.length - 1] || { type:'itemize', n:0 }, rest = t.slice(m[0].length), op2 = texOpt(rest, 0), lab = '';
+      if(op2){ lab = op2.arg; rest = rest.slice(op2.end); }
+      L.n++;
+      cur = { text: L.type === 'enumerate' || L.type === 'compactenum' ? L.n + '. ' + rest.trim() : (lab ? lab + '：' : '') + rest.trim() };
+      return;
+    }
+    if(cur){ cur.text += ' ' + t; return; }
+    if(/^\\(maketitle|tableofcontents|centering|noindent|clearpage|newpage|caption)\b/.test(t) && !/\\caption/.test(t)) return;
+    para.push(t);
+  });
+  flush();
+  return out;
+}
+/* ほかの形式から読んだブロックに混ざった LaTeX を処理する。段落をまたぐ \begin…\end はまとめて読む */
+function latexPrep(blocks){
+  var out = [], buf = null, env = '', changed = 0;
+  blocks.forEach(function(b){
+    if(b.type === 'table'){
+      var rows = (b.rows || []).map(function(r){ return r.map(function(c){ var n = latexToText(c); if(n !== c) changed++; return n; }); });
+      out.push(Object.assign({}, b, { rows: rows }));
+      return;
+    }
+    var t = String(b.text || '');
+    if(buf){
+      buf.push(t);
+      if(t.indexOf('\\end{' + env + '}') >= 0){ out.push.apply(out, latexBlocks(buf.join('\n'))); changed++; buf = null; }
+      return;
+    }
+    var m = t.match(/\\begin\{([a-zA-Z*]+)\}/);
+    if(m && t.indexOf('\\end{' + m[1] + '}') < 0){ buf = [t]; env = m[1]; return; }
+    if(m || /^\s*\\(chapter|section|subsection|subsubsection|paragraph|item)\b/.test(t)){
+      var lb = latexBlocks(t);
+      if(b.type === 'h' && lb.length === 1 && lb[0].type === 'p') lb[0] = { type:'h', level:b.level, text:lb[0].text };
+      out.push.apply(out, lb); changed++;
+      return;
+    }
+    var nt = latexToText(t);
+    if(nt !== t) changed++;
+    out.push(Object.assign({}, b, { text: nt }));
+  });
+  if(buf){ out.push.apply(out, latexBlocks(buf.join('\n'))); changed++; }
+  return { blocks: out, changed: changed };
+}
+
+/* ---------- 読み取り：入口 ---------- */
+function importSheet(b){
+  UI.imp = { bid: b ? b.id : '' };
+  openSheet('<h2>' + (b ? '「' + esc(short(b.title, 18)) + '」に資料を読み取る' : '資料から自作を追加') + '</h2>' +
+    '<p class="muted small" style="margin:-8px 0 12px">製作メモ・手順書・予定表・作業記録などを読み取り、見出し（「部品」「手順」「予定」「記録」「メンテ」など）、日付、「1.」「①」などの番号、「項目：値」の行を手がかりに振り分けます。記録する前に内容を確認できます。</p>' +
+    '<div class="impopts">' +
+      '<button class="impopt" data-act="impFile"><b>ファイルを選ぶ</b><span>Word（.docx）・PDF・テキスト・Markdown・LaTeX（.tex）・HTML</span></button>' +
+      '<div class="impopt"><b>Google ドキュメント</b><span>共有リンク（URL）を貼り付け。初回は Google のログイン画面に移動します</span>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><input id="gdocUrl" placeholder="https://docs.google.com/document/d/…" style="flex:1;min-width:0;border:1px solid var(--line);background:var(--card-2);border-radius:9px;padding:8px 10px"><button class="btn sm pri" data-act="impGdoc">読む</button></div></div>' +
+      '<div class="impopt"><b>テキストを貼り付け</b><span>メモアプリやチャットでコピーした内容をそのまま</span>' +
+        '<textarea id="impPaste" rows="4" style="width:100%;margin-top:8px;border:1px solid var(--line);background:var(--card-2);border-radius:9px;padding:8px 10px" placeholder="例：\n## 部品\n- ESP32-DevKitC ×1 ¥1,600\n## 手順\n1. ブレッドボードで試作\n## 予定\n10/12 13:00-17:00 はんだ付け"></textarea>' +
+        '<div style="text-align:right;margin-top:6px"><button class="btn sm pri" data-act="impPaste">読み取る</button></div></div>' +
+    '</div>' +
+    '<div class="formbtns"><span class="sp"></span><button class="btn" data-act="closeSheet">閉じる</button></div>');
+}
+function readFileKind(f){
+  var n = (f.name || '').toLowerCase();
+  if(/\.docx$/.test(n)) return 'docx';
+  if(/\.pdf$/.test(n) || f.type === 'application/pdf') return 'pdf';
+  if(/\.html?$/.test(n) || f.type === 'text/html') return 'html';
+  if(/\.tex$/.test(n)) return 'tex';
+  if(/\.(txt|md|markdown|csv)$/.test(n) || /^text\//.test(f.type)) return 'text';
+  if(/\.doc$/.test(n)) return 'doc';
+  return '';
+}
+function importFile(f){
+  var kind = readFileKind(f);
+  if(kind === 'doc'){ toast('古い Word 形式（.doc）は読めません。Word で .docx として保存し直してください'); return; }
+  if(!kind){ toast('Word（.docx）・PDF・テキスト・LaTeX・HTML を選んでください'); return; }
+  if(f.size > 30e6){ toast('ファイルが大きすぎます（30MB まで）'); return; }
+  toast('読み取り中…');
+  var job = kind === 'docx' ? f.arrayBuffer().then(function(b){ return docxBlocks(b).then(function(raw){ return { raw:raw }; }); })
+    : kind === 'pdf' ? f.arrayBuffer().then(function(b){ return pdfBlocks(b).then(function(raw){ return { raw:raw }; }); })
+    : f.text().then(function(t){
+        if(kind === 'html') return { raw: htmlBlocks(t) };
+        var raw = textBlocks(t, /\.(md|markdown)$/i.test(f.name));
+        return kind === 'tex' || looksLikeLatexSource(t) ? { raw:raw, pre: latexBlocks(t) } : { raw:raw };
+      });
+  job.then(function(r){
+    importAnalyze(r.raw, f.name, { type: kind === 'text' || kind === 'tex' ? 'text' : kind, name: f.name, size: f.size, blob: f }, r.pre);
+  }).catch(function(e){ console.error(e); toast('読み取れませんでした：' + (e.message || e)); });
+}
+
+/* ---------- 読み取り：ブロックを作品に振り分ける ---------- */
+var SEC_RX = [
+  ['plan', /予定|スケジュール|日程|作業日|工程表|schedule|\bplan\b|timeline/i],
+  ['log', /記録|日誌|ログ|経過|作業メモ|振り返り|やったこと|\blog\b|journal|history|diary/i],
+  ['maint', /メンテ|保守|点検|手入れ|お手入れ|定期|maintenance/i],
+  ['purpose', /目的|概要|用途|背景|はじめに|ねらい|動機|きっかけ|overview|purpose|introduction|about/i],
+  ['safety', /安全|注意|警告|危険|caution|warning|safety/i],
+  ['spec', /仕様|スペック|性能|諸元|規格|構成|設定|specification|\bspecs?\b|config/i],
+  ['parts', /部品|材料|部材|パーツ|\bbom\b|必要なもの|用意するもの|準備するもの|買うもの|買い物|購入|parts|materials|components|shopping/i],
+  ['tools', /工具|道具|使用機器|機材|\btools?\b|equipment/i],
+  ['steps', /手順|作り方|製作|組み?立て|組立|作成方法|工程|段取り|procedure|\bsteps?\b|instructions|how to|assembly|build/i],
+  ['notes', /備考|メモ|補足|参考|その他|トラブル|notes?\b|remarks/i]
+];
+function secOf(t){
+  for(var i = 0; i < SEC_RX.length; i++) if(SEC_RX[i][1].test(t)) return SEC_RX[i][0];
+  return '';
+}
+function isHead(b){
+  if(b.type === 'h' || b.type === 'title') return true;
+  if(b.type !== 'p' || b.list) return false;
+  var t = b.text.trim();
+  return t.length <= 24 && !/[。、，,.:：]$/.test(t) && !!secOf(t) && !kvMatch(t) && !numMatch(t) && !dateLead(t);
+}
+/* 行頭の日付（と時間）。2026/10/12、10/12(土)、10月12日、2026-10-12 / 13:00-17:00、13時〜17時 */
+function dateLead(t){
+  var s = String(t || '').normalize('NFKC').replace(/^\s*[-・•●○■□◆*]\s*/, ''), m, y, mo, d;
+  if((m = s.match(/^(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})\s*日?/))){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if((m = s.match(/^(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*(?:日|(?=$|\s|[(（:：・\-–—|｜、,]))/))){ mo = +m[1]; d = +m[2]; }
+  else return null;
+  if(mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  var rest = s.slice(m[0].length).replace(/^\s*[(（][日月火水木金土祝・]+[)）]/, '');
+  var start = '', end = '', tm = rest.match(/^\s*(\d{1,2})\s*[:時]\s*(\d{2})?\s*分?\s*(?:[-〜~–—]\s*(\d{1,2})\s*[:時]\s*(\d{2})?\s*分?)?/);
+  if(tm && +tm[1] <= 24 && (tm[2] || /時/.test(tm[0]))){
+    start = pad2(+tm[1]) + ':' + (tm[2] || '00');
+    if(tm[3]) end = pad2(+tm[3]) + ':' + (tm[4] || '00');
+    rest = rest.slice(tm[0].length);
+  }
+  rest = rest.replace(/^\s*[:：・\-–—|｜、,]?\s*/, '').trim();
+  var iso;
+  if(y) iso = y + '-' + pad2(mo) + '-' + pad2(d);
+  else {
+    /* 年がなければ今年。予定っぽいなら過ぎた日付は来年、記録っぽいなら先の日付は去年として扱う（呼び出し側で調整） */
+    y = new Date().getFullYear(); iso = y + '-' + pad2(mo) + '-' + pad2(d);
+  }
+  return { date:iso, yearless: !m[0].match(/^\d{4}/), start:start, end:end, rest:rest };
+}
+function fixYear(dl, future){
+  if(!dl.yearless) return dl.date;
+  var n = daysUntil(dl.date);
+  if(future && n < -60) return addDaysTo(dl.date, 0).replace(/^\d{4}/, String(+dl.date.slice(0, 4) + 1));
+  if(!future && n > 60) return dl.date.replace(/^\d{4}/, String(+dl.date.slice(0, 4) - 1));
+  return dl.date;
+}
+/* 「電池交換：3か月ごと」「フィルター掃除 30日おき」→ 日数 */
+function intervalDays(t){
+  var s = String(t || '').normalize('NFKC'), m;
+  if(/毎日/.test(s)) return { days:1, m:'毎日' };
+  if(/毎週/.test(s)) return { days:7, m:'毎週' };
+  if(/毎月/.test(s)) return { days:30, m:'毎月' };
+  if(/毎年/.test(s)) return { days:365, m:'毎年' };
+  if((m = s.match(/(\d+(?:\.\d+)?)\s*(日|週間?|か月|ヶ月|カ月|ヵ月|ケ月|月|年)\s*(ごと|毎|おき|に\s*1\s*回|周期)?/))){
+    var n = +m[1], u = m[2];
+    return { days: Math.round(n * (/週/.test(u) ? 7 : /月/.test(u) ? 30 : /年/.test(u) ? 365 : 1)), m:m[0] };
+  }
+  return null;
+}
+/* 「ESP32-DevKitC ×2 ¥1,600」「抵抗 10kΩ 10本」→ 名前・数・単価 */
+function partOf(t){
+  var s = stripBullet(String(t || '')).trim(), qty = 1, unit = '個', price = '', model = '', m;
+  var nk = s.normalize('NFKC');
+  if((m = nk.match(/[¥]\s*([\d,]+)|([\d,]+)\s*円/))){ price = +String(m[1] || m[2]).replace(/,/g, ''); s = s.replace(/[¥￥]\s*[\d,，]+|[\d,，０-９]+\s*円/, ''); }
+  nk = s.normalize('NFKC');
+  if((m = nk.match(/[×xX*]\s*(\d+)\s*(個|本|枚|セット|袋|台|巻|m|缶|組)?/))){ qty = +m[1]; if(m[2]) unit = m[2]; s = s.replace(/[×xX＊*]\s*[0-9０-９]+\s*(個|本|枚|セット|袋|台|巻|m|ｍ|缶|組)?/, ''); }
+  else if((m = nk.match(/(\d+)\s*(個|本|枚|セット|袋|台|巻|缶|組)\s*$/))){ qty = +m[1]; unit = m[2]; s = s.replace(/[0-9０-９]+\s*(個|本|枚|セット|袋|台|巻|缶|組)\s*$/, ''); }
+  s = s.replace(/[\s、,・／\/]+$/, '').trim();
+  var sp = s.split(/\s+[／\/]\s+/);
+  if(sp.length > 1){ s = sp[0]; model = sp.slice(1).join(' '); }
+  else if((m = s.match(/^(.+?)[（(]([^（）()]{1,40})[)）]$/))){ s = m[1].trim(); model = m[2].trim(); }
+  return { name:s || String(t).trim(), model:model, qty:qty, unit:unit, price:price };
+}
+/* 表の見出しから列を決めて部品にする */
+function tableParts(rows){
+  var head = rows[0].map(function(c){ return String(c || ''); }), col = {};
+  head.forEach(function(h, i){
+    if(col.name == null && /品名|部品|名称|名前|材料|パーツ|項目|品目|item|name/i.test(h)) col.name = i;
+    else if(col.model == null && /型番|規格|型式|仕様|寸法|サイズ|model/i.test(h)) col.model = i;
+    else if(col.qty == null && /数量|個数|数|qty|quantity/i.test(h)) col.qty = i;
+    else if(col.price == null && /単価|価格|金額|値段|price/i.test(h)) col.price = i;
+    else if(col.shop == null && /購入先|店|ショップ|shop|store/i.test(h)) col.shop = i;
+    else if(col.url == null && /url|リンク|link/i.test(h)) col.url = i;
+  });
+  if(col.name == null) return null;
+  return rows.slice(1).map(function(r){
+    var g = function(k){ return col[k] == null ? '' : String(r[col[k]] || '').trim(); };
+    var nm = g('name'); if(!nm) return null;
+    var q = g('qty').normalize('NFKC').match(/(\d+)\s*(\D*)/), pr = g('price').normalize('NFKC').replace(/[,¥円\s]/g, '');
+    return { name:nm, model:g('model'), qty: q ? +q[1] : 1, unit: q && q[2] && q[2].length <= 3 ? q[2] : '個', price: /^\d+(\.\d+)?$/.test(pr) ? +pr : '', shop:g('shop'), url:g('url') };
+  }).filter(Boolean);
+}
+function guessKind(text){
+  var t = String(text || '').normalize('NFKC').toLowerCase();
+  var rules = [
+    ['自作PC', /マザーボード|cpu|グラボ|グラフィックボード|gpu|電源ユニット|pcケース|bios|ddr[45]|nvme|ryzen|core i\d|radeon|geforce|rtx/],
+    ['スマートホーム', /home assistant|homekit|alexa|google home|スマートホーム|スマートリモコン|switchbot|esphome|tasmota|zigbee|matter/],
+    ['3Dプリント', /3dプリンタ|3d プリンタ|フィラメント|スライサ|stl|pla|petg|積層/],
+    ['修理・改造', /修理|故障|分解|交換修理|改造|直す|壊れ/],
+    ['DIY・木工', /木材|spf|2x4|ツーバイ|合板|ビス|丸のこ|インパクト|塗装|ニス|オイル仕上げ|棚|収納/],
+    ['電子工作', /esp32|arduino|raspberry|ラズパイ|マイコン|はんだ|ブレッドボード|led|センサ|抵抗|回路/]
+  ];
+  for(var i = 0; i < rules.length; i++) if(rules[i][1].test(t)) return rules[i][0];
+  return 'その他';
+}
+function analyzeDoc(blocks, fallbackName){
+  var r = { name:'', purpose:[], specs:[], parts:[], tools:[], steps:[], sessions:[], logs:[], maint:[], safety:[], notes:[] };
+  var hasStepsHead = blocks.some(function(b){ return isHead(b) && secOf(b.text) === 'steps'; });
+  var sec = '', cur = null, curS = null, curL = null;
+  var all = [];
+  var add = function(t, b){
+    all.push(t);
+    var m, kv, dl;
+    if(sec === 'plan'){
+      if((dl = dateLead(t))){ curS = { date:fixYear(dl, true), start:dl.start, end:dl.end, title:dl.rest || '作業', note:'' }; r.sessions.push(curS); }
+      else if(curS) curS.note += (curS.note ? '\n' : '') + stripBullet(t);
+      else { curS = { date:'', start:'', end:'', title:stripBullet(t), note:'' }; r.sessions.push(curS); }
+      return;
+    }
+    if(sec === 'log'){
+      if((dl = dateLead(t))){ curL = { date:fixYear(dl, false), text:dl.rest }; r.logs.push(curL); }
+      else if(curL) curL.text += (curL.text ? '\n' : '') + t;
+      else { curL = { date:'', text:t }; r.logs.push(curL); }
+      return;
+    }
+    if(sec === 'maint'){
+      var s0 = stripBullet(t), kvm = kvMatch(s0), iv = intervalDays(kvm ? kvm.v : s0);
+      var title = kvm ? kvm.k : s0.replace(iv ? iv.m : '', '').replace(/[\s:：・、,（(）)]+$/, '').trim();
+      var nm2 = numMatch(title); if(nm2) title = nm2.rest;
+      r.maint.push({ title: title || s0, every: iv ? iv.days : '', note: kvm && !iv ? kvm.v : '' });
+      return;
+    }
+    /* 見出しのない所で、日付から始まる行は予定（先の日付）か記録（過ぎた日付）にする */
+    if((sec === '' || sec === 'purpose' || sec === 'notes') && (dl = dateLead(t)) && dl.rest){
+      var d0 = fixYear(dl, daysUntil(dl.date) >= 0);
+      if(daysUntil(d0) >= 0 || dl.start){ curS = { date:d0, start:dl.start, end:dl.end, title:dl.rest, note:'' }; r.sessions.push(curS); }
+      else { curL = { date:d0, text:dl.rest }; r.logs.push(curL); }
+      return;
+    }
+    if(sec === 'steps' || (!hasStepsHead && (sec === '' || sec === 'purpose') && (m = numMatch(t)))){
+      m = m || numMatch(t);
+      if(m || b.list){ cur = mkStep(m ? m.rest : stripBullet(t)); r.steps.push(cur); }
+      else if(cur) cur.body += (cur.body ? '\n' : '') + t;
+      else { cur = mkStep(t); r.steps.push(cur); }
+      return;
+    }
+    if(sec === 'parts' || sec === 'tools'){
+      var kv0 = kvMatch(stripBullet(t)), k0 = kv0 && secOf(kv0.k);
+      if(k0 === 'parts' || k0 === 'tools'){ splitItems(kv0.v).forEach(function(x){ (k0 === 'parts' ? r.parts : r.tools).push(partOf(x)); }); return; }
+      var it = stripBullet(t), nm = numMatch(it);
+      (sec === 'parts' ? r.parts : r.tools).push(partOf(nm ? nm.rest : it));
+      return;
+    }
+    if(sec === 'safety'){ r.safety.push(stripBullet(t)); return; }
+    if(sec === 'notes'){ r.notes.push(t); return; }
+    if((kv = kvMatch(t)) && (sec === 'spec' || sec === '' || sec === 'purpose')){
+      var ks = secOf(kv.k);
+      if(/^(作品名|名称|名前|タイトル|製作物|装置名|プロジェクト名)$/.test(kv.k)){ if(!r.name) r.name = kv.v; return; }
+      if(ks === 'parts'){ splitItems(kv.v).forEach(function(x){ r.parts.push(partOf(x)); }); return; }
+      if(ks === 'tools'){ splitItems(kv.v).forEach(function(x){ r.tools.push(partOf(x)); }); return; }
+      if(ks === 'purpose' && sec !== 'spec'){ r.purpose.push(kv.v); return; }
+      if(ks === 'safety'){ r.safety.push(kv.v); return; }
+      r.specs.push({ k:kv.k, v:kv.v }); return;
+    }
+    if(sec === 'spec'){ r.specs.push({ k:'', v:stripBullet(t) }); return; }
+    if(sec === 'purpose' || sec === ''){ r.purpose.push(t); return; }
+    r.notes.push(t);
+  };
+  blocks.forEach(function(b){
+    if(b.type === 'table'){
+      var rows = (b.rows || []).map(function(rw){ return rw.map(function(c){ return String(c || '').replace(/\s+/g, ' ').trim(); }); }).filter(function(rw){ return rw.some(Boolean); });
+      if(!rows.length) return;
+      all.push(rows.map(function(x){ return x.join(' '); }).join('\n'));
+      var head = rows[0].join(' ');
+      var body = rows.length > 1 && /項目|名称|品名|部品|材料|内容|手順|工程|数量|日付|日時|no\.?$|^no\b|番号|仕様/i.test(head) ? rows.slice(1) : rows;
+      if(sec === 'parts' || sec === 'tools' || /品名|部品|材料|数量|個数|単価/.test(head)){
+        var tp = rows.length > 1 ? tableParts(rows) : null;
+        if(tp) tp.forEach(function(p){ (sec === 'tools' ? r.tools : r.parts).push(p); });
+        else body.forEach(function(rw){ var c = rw.filter(Boolean); if(/^[0-9０-９]+$/.test(c[0]) && c.length > 1) c = c.slice(1); (sec === 'tools' ? r.tools : r.parts).push(partOf(c.join(' ／ '))); });
+      }else if(sec === 'plan' || sec === 'log' || /日付|日時|日程/.test(head)){
+        body.forEach(function(rw){ var c = rw.filter(Boolean); if(c.length) add(c.join(' '), { type:'p' }); });
+      }else if(sec === 'steps' || /手順|工程/.test(head)){
+        body.forEach(function(rw){ var c = rw.filter(Boolean); if(/^[0-9０-９]+$/.test(c[0]) && c.length > 1) c = c.slice(1); if(c.length) r.steps.push({ title:c[0], body:c.slice(1).join('\n') }); });
+      }else if(sec === 'maint'){
+        body.forEach(function(rw){ var c = rw.filter(Boolean); if(c.length) add(c.join('：'), { type:'p' }); });
+      }else if(rows[0].length >= 2){
+        body.forEach(function(rw){ if(rw[0] || rw[1]) r.specs.push({ k:rw[0], v:rw.slice(1).filter(Boolean).join(' ') }); });
+      }else body.forEach(function(rw){ add(rw[0], { type:'p' }); });
+      return;
+    }
+    var t = String(b.text || '').trim();
+    if(!t) return;
+    if(b.type === 'title'){ if(!r.name) r.name = t; all.push(t); return; }
+    if(isHead(b)){
+      all.push(t);
+      var s2 = secOf(t);
+      if(s2){ sec = s2; cur = null; curS = null; curL = null; return; }
+      if(!r.name && b.level === 1){ r.name = t; return; }
+      if(sec === 'steps'){ cur = mkStep(t); r.steps.push(cur); }
+      return;
+    }
+    t.split('\n').forEach(function(line){ line = line.trim(); if(line) add(line, b); });
+  });
+  r.logs.forEach(function(l){ if(!l.text) l.text = '（記録）'; });
+  if(!r.name) r.name = String(fallbackName || '').replace(/\.[^.]+$/, '').replace(/[_\-]?(仕様書|手順書|製作手順|作り方|製作メモ|作業記録)[_\-]?/g, ' ').trim() || '読み取った自作';
+  r.kind = guessKind(r.name + '\n' + all.join('\n'));
+  return r;
+}
+/* 読み取ったブロックを、LaTeX を変換したものと変換しないものの両方で持っておき、確認画面で切り替えられるようにする */
+function importAnalyze(raw, name, src, pre){
+  var conv = pre ? { blocks: pre, changed: Math.max(1, (raw || []).filter(function(b){ return TEX_HINT.test(b.text || ''); }).length) } : latexPrep(raw);
+  UI.impLatex = conv.changed ? { raw: raw, conv: conv.blocks, changed: conv.changed, name: name, on: true } : null;
+  importReview(analyzeDoc(conv.changed ? conv.blocks : raw, name), src);
+}
+
+/* ---------- 読み取り：確認して記録 ---------- */
+function importReview(res, src){
+  var b = UI.imp && UI.imp.bid ? getB(UI.imp.bid) : null;
+  UI.impRes = { res:res, src:src };
+  var cnt = function(label, n, list){
+    return '<div class="impcnt' + (n ? '' : ' zero') + '"><b>' + label + '</b><span class="mono">' + n + '</span>' + (list && n ? '<div class="pv">' + list.slice(0, 4).map(function(x){ return esc(x); }).join('<br>') + (n > 4 ? '<br>…' : '') + '</div>' : '') + '</div>';
+  };
+  var pl = function(p){ return p.name + (p.model ? ' ' + p.model : '') + (p.qty > 1 ? ' ×' + p.qty : '') + (p.price ? ' ' + yen(p.price) : ''); };
+  var dl = function(x){ return (x.date ? fmtShort(x.date) + (x.start ? ' ' + x.start : '') + ' ' : '日付未定 ') + (x.title || x.text || ''); };
+  var total = ['purpose','specs','parts','tools','steps','sessions','logs','maint','safety','notes'].reduce(function(s, k){ return s + res[k].length; }, 0);
+  var stGuess = res.logs.length ? '製作中' : (res.steps.length || res.sessions.length || res.parts.length ? '段取り中' : 'アイデア');
+  openSheet('<h2>読み取り結果の確認</h2>' +
+    '<p class="muted small" style="margin:-8px 0 12px">' + esc(src.name || '') + (total ? '' : ' ・ 振り分けられる内容が見つかりませんでした') + '</p>' +
+    (b ? '<p class="small" style="margin:0 0 10px">追加先：<b>' + esc(b.title) + '</b></p>' :
+      '<div class="form"><label class="fld"><span>名前</span><input id="impName" value="' + esc(res.name) + '"></label>' +
+      '<label class="fld half"><span>種類</span><select id="impKind">' + KINDS.map(function(k){ return '<option' + (k === res.kind ? ' selected' : '') + '>' + k + '</option>'; }).join('') + '</select></label>' +
+      '<label class="fld half"><span>状態</span><select id="impStatus">' + STATUSES.map(function(k){ return '<option' + (k === stGuess ? ' selected' : '') + '>' + k + '</option>'; }).join('') + '</select></label></div>') +
+    '<div class="impgrid">' +
+      cnt('目的・概要', res.purpose.length ? 1 : 0, res.purpose.length ? [res.purpose.join(' ').slice(0, 80)] : []) +
+      cnt('仕様・設定値', res.specs.length, res.specs.map(function(s){ return s.k ? s.k + '：' + s.v : s.v; })) +
+      cnt('部品・材料', res.parts.length, res.parts.map(pl)) +
+      cnt('工具・道具', res.tools.length, res.tools.map(pl)) +
+      cnt('手順', res.steps.length, res.steps.map(function(s, i){ return (i + 1) + '. ' + s.title; })) +
+      cnt('作業日（予定）', res.sessions.length, res.sessions.map(dl)) +
+      cnt('記録', res.logs.length, res.logs.map(dl)) +
+      cnt('メンテナンス', res.maint.length, res.maint.map(function(m){ return m.title + (m.every ? '（' + m.every + '日ごと）' : ''); })) +
+      cnt('注意', res.safety.length, res.safety) +
+      cnt('備考', res.notes.length, res.notes) +
+    '</div>' +
+    (b ? '<div class="impmode"><label><input type="radio" name="impMode" value="append" checked> いまの内容に追記する</label><label><input type="radio" name="impMode" value="replace"> 読み取れた項目（仕様・部品と工具・手順など）を置き換える<br><small class="muted" style="margin-left:22px">作業日・記録・メンテは置き換えず、いつも追加します</small></label></div>' : '') +
+    (UI.impLatex ? '<label class="latexnote"><input type="checkbox" data-chg="impLatex"' + (UI.impLatex.on ? ' checked' : '') + '><span><b>LaTeX の記法をふつうの文字に変換する</b>' +
+      '<small>資料の中の LaTeX の書き方（数式・単位・表・箇条書きなど）を ' + UI.impLatex.changed + ' か所見つけました。例：$V_{CC}=5\\,\\mathrm{V}$ → V_CC = 5 V、\\SI{3.3}{\\volt} → 3.3 V。外すとコマンドのまま記録します</small></span></label>' : '') +
+    '<p class="muted small">部品と工具は、研究デスクの台帳に同じものがあれば自動でつなぎます。記録したあとも、それぞれ編集できます。' + (src.blob || src.url ? '元の資料は作品の「概要」に保存されます。' : '') + '</p>' +
+    '<div class="formbtns"><span class="sp"></span><button class="btn" data-act="closeSheet">キャンセル</button><button class="btn pri" data-act="impApply"' + (total ? '' : ' disabled') + '>この内容で記録</button></div>');
+}
+function applyImport(){
+  var x = UI.impRes; if(!x) return;
+  var res = x.res, b = UI.imp && UI.imp.bid ? getB(UI.imp.bid) : null, isNew = !b;
+  var modeEl = document.querySelector('input[name=impMode]:checked'), replace = !!modeEl && modeEl.value === 'replace';
+  if(isNew){
+    var nm = ($('#impName') && $('#impName').value.trim()) || res.name;
+    b = { id:uid(), title:nm, kind: $('#impKind') ? $('#impKind').value : res.kind, status: $('#impStatus') ? $('#impStatus').value : 'アイデア', tags:[], specs:[], bom:[], steps:[], sessions:[], maint:[], logs:[], sources:[], startDate:todayISO(), createdAt:new Date().toISOString() };
+    DB.builds.unshift(b);
+  }
+  if(!Array.isArray(b.sources)) b.sources = [];
+  var join = function(a, c){ return [a, c].filter(Boolean).join('\n'); };
+  if(res.purpose.length) b.summary = replace ? res.purpose.join('\n') : join(b.summary, res.purpose.join('\n'));
+  if(res.safety.length) b.safety = replace ? res.safety.join('\n') : join(b.safety, res.safety.join('\n'));
+  if(res.notes.length) b.notes = replace ? res.notes.join('\n') : join(b.notes, res.notes.join('\n'));
+  if(res.specs.length){
+    if(replace) b.specs = res.specs.slice();
+    else {
+      res.specs.forEach(function(s){
+        var ex = s.k && b.specs.find(function(y){ return y.k === s.k; });
+        if(ex){ if(!ex.v) ex.v = s.v; } else b.specs.push(s);
+      });
+    }
+  }
+  var toBom = function(p, role){
+    var cat = role === 'tool' ? '工具' : 'その他';
+    return newBom({ name:p.name, model:p.model || '', qty:p.qty || 1, unit:p.unit || '個', price: p.price === '' || p.price == null ? '' : p.price, shop:p.shop || '', url:p.url || '', role:role, cat:cat });
+  };
+  if(res.parts.length || res.tools.length){
+    if(replace){
+      if(res.parts.length) b.bom = b.bom.filter(function(y){ return isToolX(y); });
+      if(res.tools.length) b.bom = b.bom.filter(function(y){ return !isToolX(y); });
+    }
+    var have = {}; b.bom.forEach(function(y){ have[normName(y.name + (y.model || ''))] = 1; });
+    res.parts.map(function(p){ return toBom(p, 'part'); }).concat(res.tools.map(function(p){ return toBom(p, 'tool'); })).forEach(function(y){
+      var k = normName(y.name + (y.model || ''));
+      if(have[k]) return; have[k] = 1;
+      var it = labItem(y.invId);
+      if(it && BOM_CATS.indexOf(it.category) >= 0) y.cat = it.category;
+      else if(y.role !== 'tool') y.cat = guessCat(y.name);
+      b.bom.push(y);
+    });
+  }
+  if(res.steps.length){
+    var steps = res.steps.map(function(s){ return { id:uid(), title:s.title, body:s.body || '', mins:'', caution: /注意|危険|やけど|火傷|感電|高温|刃物/.test(s.title + s.body), done:false }; });
+    b.steps = replace ? steps : b.steps.concat(steps);
+  }
+  res.sessions.forEach(function(s){ b.sessions.push({ id:uid(), date:s.date, start:s.start, end:s.end || (s.start ? pad2((+s.start.slice(0, 2) + 2) % 24) + s.start.slice(2) : ''), title:s.title, note:s.note, done: !!s.date && daysUntil(s.date) < 0 }); });
+  res.logs.forEach(function(l, i){ b.logs.push({ id:uid(), date:l.date || todayISO(), text:l.text, photos:[], ts:Date.now() + i }); });
+  res.maint.forEach(function(m){ b.maint.push({ id:uid(), title:m.title, every: m.every || 90, last:'', note:m.note || (m.every ? '' : '周期が読み取れなかったので 90 日にしました'), history:[] }); });
+  var src = x.src, entry = { id:uid(), name:src.name || '読み取った資料', type:src.type, size:src.size || 0, url:src.url || '', importedAt:todayISO() };
+  var finish = function(){
+    b.sources.push(entry);
+    touch(b); save(); closeSheet();
+    var to = '#/b/' + b.id;
+    if(location.hash !== to) location.hash = to; else render(true);
+    var parts = [['部品・工具', res.parts.length + res.tools.length], ['手順', res.steps.length], ['作業日', res.sessions.length], ['記録', res.logs.length], ['メンテ', res.maint.length]].filter(function(p){ return p[1]; }).map(function(p){ return p[0] + ' ' + p[1]; });
+    toast((isNew ? '「' + b.title + '」を追加しました' : '記録しました') + (parts.length ? '（' + parts.join('・') + '）' : ''));
+  };
+  if(src.blob){
+    entry.fileId = uid(); STORING++;
+    FILES.put(entry.fileId, src.blob).catch(function(){ delete entry.fileId; toast('元のファイルは保存できませんでした（内容は記録します）'); })
+      .then(function(){ setTimeout(function(){ STORING = Math.max(0, STORING - 1); }, 15000); finish(); });
+  }else finish();
+}
+/* 品名から台帳と同じ分類を推測する（研究デスクと同じ規則に PC パーツを足したもの） */
+function guessCat(name){
+  var n = String(name || '').normalize('NFKC').toLowerCase();
+  var rules = [
+    [/cpu|マザーボード|メモリ|ssd|hdd|グラフィックボード|グラボ|gpu|電源ユニット|pcケース|cpuクーラー|ryzen|core i\d|geforce|radeon|ddr[45]|nvme/, 'PCパーツ'],
+    [/テスター|マルチメータ|オシロ|ロジアナ|電源装置|ノギス|計測|下地センサ/, '計測器'],
+    [/はんだごて|ニッパー|ペンチ|ドライバー(?!ic)|ストリッパ|ピンセット|カッター|ドリル|やすり|圧着|工具|のこぎり|インパクト|メジャー/, '工具'],
+    [/はんだ|フラックス|熱収縮|接着|テープ|アクリル|ネジ|ねじ|ボルト|ナット|スペーサ|結束|フィラメント|木材|spf|合板|塗料|ニス|オイル|グリス|ビス|金具/, '材料・消耗品'],
+    [/esp32|esp8266|arduino|raspberry|ラズパイ|m5stack|pico|マイコン|seeed|xiao/, 'マイコン・ボード'],
+    [/wi-?fi|bluetooth|ble|lora|zigbee|無線|通信|gps/, '通信モジュール'],
+    [/センサ|sensor|bme|scd|dht|mpu|加速度|ジャイロ|温度|湿度|照度|距離|フォトリフレクタ/, 'センサ'],
+    [/led|oled|lcd|液晶|ディスプレイ|表示|7セグ/, '表示・LED'],
+    [/モーター|モータ|サーボ|ステッピング|モータードライバ|tb6612|drv|ポンプ|ファン/, 'モーター・駆動'],
+    [/電池|バッテリ|充電|レギュレータ|dc-?dc|acアダプタ|電源/, '電源・電池'],
+    [/抵抗|コンデンサ|インダクタ|コイル|可変抵抗|ボリューム|水晶|クリスタル/, '受動部品'],
+    [/トランジスタ|mosfet|fet|ダイオード|オペアンプ|ロジック|\bic\b/, '半導体・IC'],
+    [/ケーブル|コネクタ|ワイヤ|ジャンパ|ピンヘッダ|ソケット|端子|usb/, 'コネクタ・配線'],
+    [/基板|ブレッドボード|ユニバーサル|pcb/, '基板・ブレッドボード']
+  ];
+  for(var i = 0; i < rules.length; i++) if(rules[i][0].test(n)) return rules[i][1];
+  return 'その他';
+}
+
+/* ---------- Google ドキュメント（Docs API。初回だけ Google のログイン画面へ） ---------- */
+function docsTokenOK(){ return !!(SM.docsToken && SM.docsExp && Date.now() < SM.docsExp); }
+function importGdoc(bid, url){
+  var m = String(url || '').match(/\/document\/(?:u\/\d+\/)?d\/([A-Za-z0-9_-]{20,})/) || String(url || '').match(/^([A-Za-z0-9_-]{25,})$/);
+  if(!m){ toast('Google ドキュメントの URL を貼り付けてください'); return; }
+  if(!docsTokenOK()){
+    if(!confirm('Google ドキュメントを読むため、Google のログイン画面に移動します。読み取りの許可（閲覧のみ）を求められたら許可してください。')) return;
+    login(false, { scope: DOCS_SCOPE + (SM.signedIn ? ' https://www.googleapis.com/auth/drive.appdata' : ''), purpose:'docs', pending:{ bid:bid || '', url:url } });
+    return;
+  }
+  UI.imp = { bid: bid || '' };
+  toast('Google ドキュメントを読み取り中…');
+  fetch('https://docs.googleapis.com/v1/documents/' + m[1], { headers:{ Authorization:'Bearer ' + SM.docsToken } }).then(function(r){
+    return r.json().catch(function(){ return {}; }).then(function(j){
+      if(r.ok) return j;
+      var msg = (j.error && j.error.message) || '';
+      if(r.status === 401){ SM.docsToken = ''; SM.docsExp = 0; saveSM(); throw new Error('ログインの期限が切れました。もう一度「読む」を押してください'); }
+      if(r.status === 403 && /has not been used|disabled|SERVICE_DISABLED/i.test(msg + JSON.stringify(j))) throw new Error('Google Cloud で「Google Docs API」が有効になっていません。README の手順で有効にしてください');
+      if(r.status === 403 || r.status === 404) throw new Error('ドキュメントが見つからないか、このアカウントに閲覧権限がありません');
+      if(r.status === 400) throw new Error('Google ドキュメント形式ではありません（Word のまま Drive に置かれたファイルは、ダウンロードして .docx で読み込んでください）');
+      throw new Error('Google ドキュメント ' + r.status + ' ' + msg);
+    });
+  }).then(function(doc){
+    importAnalyze(gdocBlocks(doc), doc.title, { type:'gdoc', name: doc.title || 'Google ドキュメント', url: 'https://docs.google.com/document/d/' + m[1] + '/edit' });
+  }).catch(function(e){ alert(e.message || String(e)); });
+}
+
+/* ============================================================
    端末間の同期（Google ドライブのアプリ専用領域）
    研究デスクと同じ方式。OAuth クライアントは研究デスクと同じ Google Cloud
    プロジェクトの自作デスク専用のもの。アプリ専用領域はプロジェクト単位なので
@@ -1325,13 +2289,14 @@ function saveSM(){ try{ localStorage.setItem(SM_KEY, JSON.stringify(SM)); }catch
 function clientId(){ return GOOGLE_CLIENT_ID || SM.clientId || ''; }
 function tokenOK(){ return !!(SM.token && SM.exp && Date.now() < SM.exp); }
 function redirectURI(){ return location.origin + location.pathname.replace(/index\.html$/, ''); }
-function login(silent){
+function login(silent, opt){
+  opt = opt || {};
   if(!clientId()){ location.hash = '#/settings'; return; }
   var st = uid() + uid();
-  try{ sessionStorage.setItem('maker-desk-oauth', JSON.stringify({ st:st, back: location.hash || '#/', silent: !!silent })); }catch(e){}
+  try{ sessionStorage.setItem('maker-desk-oauth', JSON.stringify({ st:st, back: location.hash || '#/', silent: !!silent, purpose: opt.purpose || 'sync', pending: opt.pending || null })); }catch(e){}
   var q = {
     client_id: clientId(), redirect_uri: redirectURI(), response_type: 'token',
-    scope: 'https://www.googleapis.com/auth/drive.appdata', include_granted_scopes: 'true', state: st
+    scope: opt.scope || 'https://www.googleapis.com/auth/drive.appdata', include_granted_scopes: 'true', state: st
   };
   if(SM.email) q.login_hint = SM.email;
   if(silent) q.prompt = 'none';
@@ -1346,9 +2311,20 @@ function takeOAuthReturn(){
   try{ saved = JSON.parse(sessionStorage.getItem('maker-desk-oauth')) || {}; sessionStorage.removeItem('maker-desk-oauth'); }catch(e){}
   if(q.get('state') && q.get('state') === saved.st){
     if(q.get('access_token')){
-      SM.token = q.get('access_token'); SM.exp = Date.now() + (Math.max(60, +q.get('expires_in') || 3600) - 120) * 1000;
-      SM.signedIn = true; SM.needLogin = false; saveSM();
-      SYNC.justLoggedIn = true;
+      var tok = q.get('access_token'), exp = Date.now() + (Math.max(60, +q.get('expires_in') || 3600) - 120) * 1000, scopes = q.get('scope') || '';
+      if(scopes.indexOf('documents') >= 0){ SM.docsToken = tok; SM.docsExp = exp; }
+      if(saved.purpose === 'docs'){
+        /* Google ドキュメントの読み取り用。同期中ならトークンを同期にも使う */
+        if(SM.signedIn && scopes.indexOf('drive.appdata') >= 0){ SM.token = tok; SM.exp = exp; }
+        saveSM();
+        SYNC.resumeDocs = saved.pending;
+      }else{
+        SM.token = tok; SM.exp = exp;
+        SM.signedIn = true; SM.needLogin = false; saveSM();
+        SYNC.justLoggedIn = true;
+      }
+    }else if(q.get('error') && saved.purpose === 'docs'){
+      SYNC.flash = 'Google ドキュメントの読み取りが許可されませんでした（' + q.get('error') + '）';
     }else if(q.get('error')){
       SM.needLogin = true; saveSM();
       if(!saved.silent) SYNC.flash = 'ログインできませんでした（' + q.get('error') + '）';
@@ -1500,7 +2476,10 @@ function syncFiles(files){
   var remote = {};
   files.forEach(function(x){ if(x.name.indexOf('mk-') === 0) remote[x.name.slice(3)] = x; });
   var need = {};
-  DB.builds.forEach(function(b){ b.logs.forEach(function(l){ l.photos.forEach(function(k){ need[k] = 1; need[k + '_t'] = 1; }); }); });
+  DB.builds.forEach(function(b){
+    b.logs.forEach(function(l){ l.photos.forEach(function(k){ need[k] = 1; need[k + '_t'] = 1; }); });
+    (b.sources || []).forEach(function(x){ if(x.fileId) need[x.fileId] = 1; });
+  });
   var downloaded = 0;
   return FILES.keys().then(function(localKeys){
     var local = {}; localKeys.forEach(function(k){ local[k] = 1; });
@@ -1656,6 +2635,7 @@ function topbar(html){ $('#topbar').innerHTML = html; }
 function brandBar(){
   topbar('<div class="brand"><i></i>自作デスク</div><span class="sp"></span>' +
     '<span class="mono small faint">' + fmtDate(todayISO()) + '</span>' +
+    '<button class="iconbtn" data-act="themeToggle" title="' + (isDark() ? 'ライトモードにする' : 'ダークモードにする') + '" aria-label="' + (isDark() ? 'ライトモードにする' : 'ダークモードにする') + '">' + (isDark() ? I.sun : I.moon) + '</button>' +
     (SM.signedIn ? '<button class="iconbtn sync ' + SYNC.state + '" id="syncBtn" data-act="syncNow" title="' + esc(syncLabel()) + '" aria-label="同期">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.1 4.75 4.75 0 0 0 7 18.5z"/><path class="ok" d="M9.5 13.5l2 2 3.5-3.5"/><path class="bang" d="M12 10.5v3M12 16v.01"/></svg></button>' : ''));
 }
@@ -1695,7 +2675,7 @@ function viewHome(){
   if(!bs.length){
     return '<div class="card empty" style="margin-top:8px"><div class="big">まだ自作が登録されていません</div>' +
       '<div>電子工作・スマートホーム・DIY・自作PC・修理など、<br>作りたいもの・作ったものを登録して、部品と段取りと記録をまとめておけます。</div>' +
-      '<div class="btnrow"><button class="btn pri" data-act="buildNew">' + I.plus + '自作を追加</button><button class="btn" data-act="loadSample">サンプルで試す</button></div></div>' + labHint();
+      '<div class="btnrow"><button class="btn pri" data-act="buildNew">' + I.plus + '自作を追加</button><button class="btn" data-act="impNew">' + I.doc + '資料から追加</button><button class="btn" data-act="loadSample">サンプルで試す</button></div></div>' + labHint();
   }
   var making = bs.filter(function(b){ return ACTIVE.indexOf(b.status) >= 0; }).length;
   var running = bs.filter(function(b){ return b.status === '稼働中'; }).length;
@@ -1710,7 +2690,7 @@ function viewHome(){
   var counts = { 'すべて': bs.length };
   STATUSES.forEach(function(s){ counts[s] = bs.filter(function(b){ return b.status === s; }).length; });
   var kc = {}; bs.forEach(function(b){ kc[b.kind] = (kc[b.kind] || 0) + 1; });
-  h += '<div class="sec"><h2>自作</h2></div><div class="chips">' + ['すべて'].concat(STATUSES).filter(function(s){ return s === 'すべて' || counts[s]; }).map(function(s){
+  h += '<div class="sec"><h2>自作</h2><span class="sp"></span><button class="btn sm ghost" data-act="impNew">' + I.doc + '資料から追加</button></div><div class="chips">' + ['すべて'].concat(STATUSES).filter(function(s){ return s === 'すべて' || counts[s]; }).map(function(s){
     return '<button class="chip' + (UI.filter === s ? ' on' : '') + '" data-act="filter" data-v="' + s + '">' + s + ' <b>' + counts[s] + '</b></button>';
   }).join('') + '</div>';
   if(Object.keys(kc).length > 1) h += '<div class="chips">' + ['すべて'].concat(KINDS.filter(function(k){ return kc[k]; })).map(function(k){
@@ -1746,6 +2726,7 @@ function buildCard(b){
 var BTABS = [['overview','概要'],['parts','部品・工具'],['prep','段取り'],['log','記録'],['maint','メンテ']];
 function viewBuild(b, tab){
   topbar('<a class="iconbtn" href="#/" aria-label="戻る">' + I.back + '</a><h1>' + esc(b.title) + '</h1>' +
+    '<button class="iconbtn" data-act="themeToggle" aria-label="' + (isDark() ? 'ライトモードにする' : 'ダークモードにする') + '">' + (isDark() ? I.sun : I.moon) + '</button>' +
     '<button class="iconbtn" data-act="buildEdit" aria-label="編集">' + I.edit + '</button>');
   var pr = stepProg(b);
   var cnt = { parts:b.bom.length, prep:b.steps.length + upcomingSessions(b).length, log:b.logs.length, maint:b.maint.length };
@@ -1779,10 +2760,12 @@ function fmtMins(m){ return m >= 60 ? Math.floor(m / 60) + '時間' + (m % 60 ? 
 
 function tabOverview(b){
   var dd = function(label, v){ return '<div><dt>' + label + '</dt><dd' + (v ? '' : ' class="none"') + '>' + (v ? esc(v) : '未記入') + '</dd></div>'; };
-  var h = '<div class="sec"><h2>この自作について</h2><span class="sp"></span><button class="btn sm" data-act="buildEdit">' + I.edit + '編集</button></div>' +
+  var h = '<div class="sec"><h2>この自作について</h2><span class="sp"></span><button class="btn sm ghost" data-act="impOpen">' + I.doc + '読み取る</button><button class="btn sm" data-act="buildEdit">' + I.edit + '編集</button></div>' +
     '<div class="card"><dl class="dl">' + dd('目的・どう便利になるか', b.summary) + dd('使う場所・設置場所', b.place) +
     (b.doneDate ? dd('完成日', fmtDate(b.doneDate)) : '') +
     (b.url && /^https?:\/\//.test(b.url) ? '<div><dt>参考ページ</dt><dd><a href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(short(b.url, 48)) + ' ↗</a></dd></div>' : '') +
+    (b.safety ? '<div class="warnbox"><dt>安全上の注意</dt><dd>' + esc(b.safety) + '</dd></div>' : '') +
+    (b.notes ? dd('備考', b.notes) : '') +
     '<div><dt>タグ</dt><dd>' + ((b.tags || []).length ? '<div class="tags">' + b.tags.map(function(t){ return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>' : '<span class="faint">なし</span>') + '</dd></div>' +
     '</dl></div>';
   var specs = b.specs.filter(function(s){ return s.k || s.v; });
@@ -1796,6 +2779,14 @@ function tabOverview(b){
   var last = b.logs.slice().sort(function(a, c){ return (c.date || '') > (a.date || '') ? 1 : -1; })[0];
   if(last) h += '<div class="sec"><h2>最新の記録</h2><span class="sp"></span><a class="lnk" href="#/b/' + b.id + '/log">記録をすべて見る</a></div>' +
     '<div class="card pad"><div class="mono small muted">' + fmtDate(last.date) + '</div><div style="white-space:pre-wrap">' + esc(last.text) + '</div>' + photosHTML(last) + '</div>';
+  var srcs = b.sources || [];
+  h += '<div class="sec"><h2>元の資料</h2><span class="sp"></span><button class="btn sm" data-act="impOpen">' + I.plus + '読み取る</button></div>';
+  h += srcs.length ? '<div class="card">' + srcs.map(function(x){
+    return '<div class="srcrow"><span class="pill plain">' + esc({ docx:'Word', pdf:'PDF', gdoc:'Google', text:'テキスト', html:'HTML', paste:'貼り付け' }[x.type] || x.type) + '</span>' +
+      '<span class="nm">' + esc(x.name) + '</span><span class="mono small faint">' + (x.importedAt ? fmtShort(x.importedAt) : '') + '</span>' +
+      (x.fileId || x.url ? '<button class="btn sm ghost" data-act="srcOpen" data-id="' + x.id + '">開く</button>' : '') +
+      '<button class="btn sm ghost" data-act="srcDel" data-id="' + x.id + '" aria-label="外す">✕</button></div>';
+  }).join('') + '</div>' : '<div class="card empty" style="padding:18px">製作メモ・手順書・予定表・作業記録（Word・PDF・テキスト・Google ドキュメント）を読み取ると、<br>部品・手順・作業日・記録に振り分けて追加し、元の資料をここに残します。</div>';
   return h;
 }
 
@@ -1847,7 +2838,7 @@ function tabPrep(b){
     : '<div class="card empty" style="padding:20px">いつ作業するかを決めておくと、予定にまとまり、カレンダーにも追加できます。</div>';
   if(past.length) h += '<div class="small muted" style="margin:8px 2px">終わった作業日：' + past.slice(0, 6).map(function(s){ return '<button class="lnk small" style="color:var(--acc-ink)" data-act="sessEdit" data-b="' + b.id + '" data-id="' + s.id + '">' + fmtShort(s.date) + '</button>'; }).join('、') + '</div>';
   var d = b.steps.filter(function(s){ return s.done; }).length;
-  h += '<div class="sec"><h2>手順</h2><span class="mono small faint">' + d + '/' + b.steps.length + '</span><span class="sp"></span>' + (b.steps.length ? '<button class="btn sm ghost" data-act="stepCopy">' + I.copy + 'コピー</button>' : '') + '<button class="btn sm pri" data-act="stepNew">' + I.plus + '追加</button></div>';
+  h += '<div class="sec"><h2>手順</h2><span class="mono small faint">' + d + '/' + b.steps.length + '</span><span class="sp"></span>' + (b.steps.length ? '<button class="btn sm ghost" data-act="stepCopy">' + I.copy + 'コピー</button>' : '') + '<button class="btn sm ghost" data-act="impOpen">' + I.doc + '読み取る</button><button class="btn sm pri" data-act="stepNew">' + I.plus + '追加</button></div>';
   if(!b.steps.length) return h + '<div class="card empty" style="padding:20px">作業の順番を並べておくと、1 つずつチェックしながら進められます。<br>種類に合わせたひな形も入れられます。<div class="btnrow"><button class="btn sm" data-act="tplApply">ひな形を入れる</button></div></div>';
   h += '<div class="card"><ol class="steps">' + b.steps.map(function(s, i){
     return '<li class="' + (s.done ? 'done' : '') + '"><button class="chk' + (s.done ? ' on' : '') + '" data-act="stepToggle" data-id="' + s.id + '" aria-label="できた">' + I.check + '</button>' +
@@ -1863,7 +2854,7 @@ function photosHTML(l){
   return l.photos.length ? '<div class="photos">' + l.photos.map(function(k){ return '<img data-img="' + esc(k + '_t') + '" data-act="photoZoom" data-k="' + esc(k) + '" alt="写真">'; }).join('') + '</div>' : '';
 }
 function tabLog(b){
-  var h = '<div class="sec"><h2>製作・使用の記録</h2><span class="mono small faint">' + b.logs.length + '</span></div>' +
+  var h = '<div class="sec"><h2>製作・使用の記録</h2><span class="mono small faint">' + b.logs.length + '</span><span class="sp"></span><button class="btn sm ghost" data-act="impOpen">' + I.doc + '資料から読み取る</button></div>' +
     '<div class="card"><div class="logadd"><textarea id="logText" placeholder="やったこと・うまくいかなかったこと・使ってみた感想"></textarea>' +
     '<div class="pend" id="pend">' + pendHTML() + '</div>' +
     '<div class="btnrow"><input type="date" id="logDate" value="' + todayISO() + '" style="width:auto;flex:1;max-width:180px"><button class="btn" data-act="photoAdd">' + I.camera + '写真</button><span class="sp" style="flex:1"></span><button class="btn pri" data-act="logAdd">記録する</button></div></div>';
@@ -2070,11 +3061,19 @@ function render(keepScroll){
 }
 window.addEventListener('hashchange', function(){ closeSheet(); render(false); });
 
+var DARK_MQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function isDark(){ var t = DB.settings.theme || 'auto'; return t === 'dark' || (t === 'auto' && !!DARK_MQ && DARK_MQ.matches); }
 function applyTheme(){
   var t = DB.settings.theme || 'auto';
   if(t === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
+  /* ステータスバーの色も合わせる（端末に合わせるときは OS の設定に任せる） */
+  document.querySelectorAll('meta[name=theme-color]').forEach(function(m){
+    if(!m.dataset.orig) m.dataset.orig = m.getAttribute('content');
+    m.setAttribute('content', t === 'auto' ? m.dataset.orig : (t === 'dark' ? '#101215' : '#EEEEE9'));
+  });
 }
+if(DARK_MQ && DARK_MQ.addEventListener) DARK_MQ.addEventListener('change', function(){ if((DB.settings.theme || 'auto') === 'auto' && !uiBusy()) render(true); });
 
 /* ============================================================
    操作
@@ -2195,6 +3194,34 @@ var ACT = {
   },
   calDownload: function(){ var list = calSelected(); if(!list.length) return toast('送る予定を選んでください'); downloadICS(buildICS(list), calFileName(), list); },
   photoAdd: function(){ $('#photoFile').click(); },
+  impNew: function(){ importSheet(null); },
+  impOpen: function(){ importSheet(UI.cur); },
+  impFile: function(){ $('#docFile').click(); },
+  impPaste: function(){
+    var t = ($('#impPaste').value || '').trim();
+    if(!t){ $('#impPaste').focus(); return; }
+    importAnalyze(textBlocks(t, /^#\s/m.test(t)), '貼り付けたテキスト', { type:'paste', name:'貼り付けたテキスト' }, looksLikeLatexSource(t) ? latexBlocks(t) : null);
+  },
+  impGdoc: function(){ importGdoc(UI.imp ? UI.imp.bid : '', ($('#gdocUrl').value || '').trim()); },
+  impApply: function(){ applyImport(); },
+  srcOpen: function(el){
+    var x = (UI.cur.sources || []).find(function(y){ return y.id === el.dataset.id; });
+    if(!x) return;
+    if(x.url && !x.fileId){ window.open(x.url, '_blank', 'noopener'); return; }
+    fileURL(x.fileId).then(function(u){ if(u) window.open(u, '_blank'); else toast('ファイルがこの端末にありません（同期の完了を待ってください）'); });
+  },
+  srcDel: function(el){
+    var b = UI.cur, x = (b.sources || []).find(function(y){ return y.id === el.dataset.id; });
+    if(!x || !confirm('「' + x.name + '」を元の資料から外しますか？（読み取って記録した内容はそのまま残ります）')) return;
+    if(x.fileId) dropPhoto(x.fileId);
+    b.sources = b.sources.filter(function(y){ return y !== x; });
+    touch(b); save(); render(true);
+  },
+  themeToggle: function(){
+    DB.settings.theme = isDark() ? 'light' : 'dark';
+    save(); applyTheme(); render(true);
+    toast(DB.settings.theme === 'dark' ? 'ダークモードにしました' : 'ライトモードにしました');
+  },
   pendDel: function(el){ var p = UI.pend.splice(+el.dataset.i, 1)[0]; if(p) URL.revokeObjectURL(p.url); $('#pend').innerHTML = pendHTML(); },
   photoZoom: function(el){ lightbox(el.dataset.k); },
   logAdd: function(){
@@ -2222,7 +3249,7 @@ var ACT = {
   syncLogout: function(){ if(confirm('この端末の同期をやめますか？（データは消えません）')){ logout(); render(true); toast('ログアウトしました'); } },
   exportJson: function(){
     var keys = [];
-    DB.builds.forEach(function(b){ b.logs.forEach(function(l){ l.photos.forEach(function(k){ keys.push(k, k + '_t'); }); }); });
+    DB.builds.forEach(function(b){ b.logs.forEach(function(l){ l.photos.forEach(function(k){ keys.push(k, k + '_t'); }); }); (b.sources || []).forEach(function(x){ if(x.fileId) keys.push(x.fileId); }); });
     if(!keys.length){ download('maker-desk-backup-' + todayISO() + '.json', JSON.stringify(DB, null, 2), 'application/json'); return; }
     toast('写真をまとめています…');
     var files = {};
@@ -2259,7 +3286,13 @@ document.addEventListener('click', function(e){
 $('#lightbox').addEventListener('click', function(e){ if(e.target.id === 'lightbox' || e.target.id === 'lbImg') $('#lightbox').hidden = true; });
 document.addEventListener('change', function(e){
   var k = e.target.dataset.chg;
-  if(k === 'theme'){ DB.settings.theme = e.target.value; save(); applyTheme(); }
+  if(k === 'theme'){ DB.settings.theme = e.target.value; save(); applyTheme(); render(true); }
+  else if(k === 'impLatex' && UI.impLatex && UI.impRes){
+    UI.impLatex.on = e.target.checked;
+    var keepName = $('#impName') ? $('#impName').value : '';
+    importReview(analyzeDoc(UI.impLatex.on ? UI.impLatex.conv : UI.impLatex.raw, UI.impLatex.name), UI.impRes.src);
+    if(keepName && $('#impName')) $('#impName').value = keepName;
+  }
   else if(k === 'partsMine'){ UI.partsMine = e.target.checked; $('#partsList').innerHTML = partsListHTML(); }
 });
 document.addEventListener('keydown', function(e){
@@ -2278,6 +3311,7 @@ $('#photoFile').addEventListener('change', function(e){
     if(r.some(function(x){ return !x; })) toast('読み込めない写真がありました');
   });
 });
+$('#docFile').addEventListener('change', function(e){ var f = e.target.files[0]; e.target.value = ''; if(f) importFile(f); });
 $('#importFile').addEventListener('change', function(e){
   var f = e.target.files[0]; e.target.value = '';
   if(!f) return;
@@ -2392,6 +3426,10 @@ applyTheme();
 render(false);
 if(SYNC.flash) toast(SYNC.flash);
 syncStartup();
+if(SYNC.resumeDocs){
+  var rdoc = SYNC.resumeDocs; SYNC.resumeDocs = null;
+  setTimeout(function(){ importGdoc(rdoc.bid, rdoc.url); }, 400);
+}
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }

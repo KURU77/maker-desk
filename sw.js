@@ -1,6 +1,6 @@
 /* 自作デスク — オフライン用サービスワーカー
    HTML はネットワーク優先（更新をすぐ反映）、それ以外はキャッシュ優先。 */
-var CACHE = 'maker-desk-v1';
+var CACHE = 'maker-desk-v2';
 var ASSETS = [
   './',
   './index.html',
