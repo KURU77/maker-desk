@@ -1,0 +1,2399 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>自作デスク — 電子工作・DIY・自作PCの記録と段取り</title>
+<meta name="description" content="暮らしを便利にする電子工作・スマートホーム・DIY・自作PCなど、自作したものの記録と段取りをまとめて管理するアプリ。部品・工具は研究デスクの台帳とつながります。">
+<meta name="theme-color" content="#EEEEE9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101215" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="自作デスク">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* ============================================================
+   自作デスク — 自作したものの記録と段取り
+   研究デスク（lab-desk）と同じ骨組み。色は :root のトークンだけで定義し、
+   light / dark / OS依存 の 3 状態すべてで解決するようにしてある。
+   ============================================================ */
+:root{
+  --bg:#EEEEE9; --grid:rgba(40,55,90,.05);
+  --card:#FCFCFA; --card-2:#F3F3EF; --sunken:#E5E5DF;
+  --ink:#16181C; --muted:#5E6470; --faint:#878C96;
+  --line:#D4D5CE; --line-soft:#E3E3DD;
+  --acc:#3B5BA9; --acc-ink:#30509A; --acc-soft:#E0E6F4; --on-acc:#FFFFFF;
+  --pcb:#2D6A4E; --pcb-soft:#DAEADF;
+  --warn:#94620A; --warn-soft:#F4E9CF;
+  --bad:#B3261E; --bad-soft:#F6DFDC;
+  --cu:#B4531F; --cu-soft:#F5E4D8;
+  --shadow:0 1px 2px rgba(20,22,28,.05), 0 6px 18px rgba(20,22,28,.06);
+  --shadow-lift:0 2px 6px rgba(20,22,28,.08), 0 18px 44px rgba(20,22,28,.16);
+  --scrim:rgba(14,16,20,.45);
+  --f-body:"IBM Plex Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:12px; --r-sm:8px;
+  --navh:62px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101215; --grid:rgba(140,165,220,.045);
+    --card:#181B20; --card-2:#1E2228; --sunken:#13161A;
+    --ink:#E5E8ED; --muted:#9AA1AD; --faint:#777E8A;
+    --line:#2A2F37; --line-soft:#22262D;
+    --acc:#8EA8E6; --acc-ink:#A9BEF0; --acc-soft:#1B2440; --on-acc:#0C1226;
+    --pcb:#72C398; --pcb-soft:#15291E;
+    --warn:#DDA947; --warn-soft:#33280E;
+    --bad:#F08077; --bad-soft:#3A1B19;
+    --cu:#E08A55; --cu-soft:#3A2417;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 8px 22px rgba(0,0,0,.32);
+    --shadow-lift:0 2px 8px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.5);
+    --scrim:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101215; --grid:rgba(140,165,220,.045);
+  --card:#181B20; --card-2:#1E2228; --sunken:#13161A;
+  --ink:#E5E8ED; --muted:#9AA1AD; --faint:#777E8A;
+  --line:#2A2F37; --line-soft:#22262D;
+  --acc:#8EA8E6; --acc-ink:#A9BEF0; --acc-soft:#1B2440; --on-acc:#0C1226;
+  --pcb:#72C398; --pcb-soft:#15291E;
+  --warn:#DDA947; --warn-soft:#33280E;
+  --bad:#F08077; --bad-soft:#3A1B19;
+  --cu:#E08A55; --cu-soft:#3A2417;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 8px 22px rgba(0,0,0,.32);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.5);
+  --scrim:rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation;overflow-x:hidden;overscroll-behavior-x:none}
+html,body{margin:0;padding:0}
+body{
+  background-color:var(--bg); color:var(--ink);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:24px 24px; background-attachment:fixed;
+  font-family:var(--f-body); font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
+  min-height:100vh; overflow-x:hidden; overscroll-behavior-x:none;
+}
+body.lock{overflow:hidden;position:fixed;left:0;right:0;width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+a{color:var(--acc-ink);text-decoration:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--f-mono);font-feature-settings:"zero" 1}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.small{font-size:12.5px}
+[hidden]{display:none!important}
+
+/* ---------- 骨組み ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+header.top{
+  position:sticky;top:0;z-index:20;
+  padding:calc(env(safe-area-inset-top) + 10px) 0 10px;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft);
+}
+header.top .wrap{display:flex;align-items:center;gap:10px;min-height:40px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.02em;font-size:17px}
+.brand i{width:22px;height:22px;border-radius:6px;background:var(--acc);display:grid;place-items:center;flex:none}
+.brand i::after{content:"";width:9px;height:9px;border:2px solid var(--on-acc);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border-radius:1px}
+.top h1{font-size:17px;margin:0;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sp{flex:1}
+.iconbtn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+.iconbtn:hover{background:var(--sunken);color:var(--ink)}
+.iconbtn svg{width:21px;height:21px}
+main{padding:16px 0 calc(var(--navh) + env(safe-area-inset-bottom) + 90px)}
+
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:color-mix(in srgb, var(--card) 92%, transparent);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr);height:var(--navh);padding:0 4px}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--faint);font-size:11px;font-weight:500;position:relative}
+nav.tabs a svg{width:22px;height:22px}
+nav.tabs a.on{color:var(--acc-ink)}
+nav.tabs a .badge{position:absolute;top:7px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;font-family:var(--f-mono);font-weight:600;display:grid;place-items:center;padding:0 4px}
+
+/* ---------- 部品 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:14px 16px}
+.sec{margin:22px 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec h2{font-size:13px;margin:0;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.sec .sp{flex:1}
+.sec .lnk{font-size:13px;font-weight:500}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:10px;
+  border:1px solid var(--line);background:var(--card);font-weight:500;font-size:14px;white-space:nowrap}
+.btn:hover{background:var(--card-2)}
+.btn svg{width:17px;height:17px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn.sm{height:32px;padding:0 11px;font-size:13px;border-radius:8px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--sunken)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+.fab{position:fixed;z-index:25;right:max(16px, calc(50% - 380px + 16px));bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 16px);
+  height:52px;padding:0 20px 0 16px;border-radius:26px;background:var(--acc);color:var(--on-acc);
+  display:flex;align-items:center;gap:8px;font-weight:700;box-shadow:var(--shadow-lift)}
+.fab svg{width:22px;height:22px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:700;letter-spacing:.03em;white-space:nowrap;
+  background:var(--sunken);color:var(--muted)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.plain::before{display:none}
+.st-アイデア{background:var(--sunken);color:var(--muted)}
+.st-段取り中{background:var(--warn-soft);color:var(--warn)}
+.st-製作中{background:var(--acc-soft);color:var(--acc-ink)}
+.st-稼働中{background:var(--pcb-soft);color:var(--pcb)}
+.st-保留{background:var(--sunken);color:var(--muted)}
+.st-引退{background:var(--sunken);color:var(--faint)}
+.pill.acc{background:var(--acc-soft);color:var(--acc-ink)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--pcb-soft);color:var(--pcb)}
+.pill.cu{background:var(--cu-soft);color:var(--cu)}
+.kind{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11px;font-weight:700;background:var(--card-2);border:1px solid var(--line-soft);color:var(--muted);white-space:nowrap}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--line);background:var(--card);font-size:13px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.chip b{font-family:var(--f-mono);font-weight:500;font-size:11.5px;color:var(--faint)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip.on b{color:inherit;opacity:.7}
+.chips + .chips{margin-top:4px}
+
+.bar{height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.bar.done i{background:var(--pcb)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{padding:12px 12px 10px;display:block;color:inherit}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:500}
+.stat .v{font-family:var(--f-mono);font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.3;white-space:nowrap}
+.stat .v small{font-size:12px;color:var(--muted);font-weight:500;margin-left:2px}
+@media (max-width:560px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty .big{font-size:16px;color:var(--ink);font-weight:700;margin-bottom:6px}
+.empty .btnrow{justify-content:center;margin-top:16px}
+
+/* 作品カード */
+.plist{display:grid;gap:10px}
+.proj{display:flex;gap:12px;color:inherit;padding:14px 16px 13px;position:relative;overflow:hidden}
+.proj:hover{border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}
+.proj .cov{width:64px;height:64px;border-radius:10px;flex:none;object-fit:cover;background:var(--sunken);border:1px solid var(--line-soft)}
+.proj .bd{flex:1;min-width:0}
+.proj .hd{display:flex;align-items:flex-start;gap:8px}
+.proj h3{margin:0;font-size:16px;line-height:1.45;flex:1;min-width:0}
+.proj .sum{margin:4px 0 8px;color:var(--muted);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.proj .pr{display:flex;align-items:center;gap:10px}
+.proj .pr .bar{flex:1}
+.proj .pr .n{font-family:var(--f-mono);font-size:12px;font-weight:600;min-width:38px;text-align:right;color:var(--muted)}
+.proj .meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.proj .meta span{display:inline-flex;align-items:center;gap:5px}
+.proj .meta svg{width:14px;height:14px;opacity:.8}
+.proj .meta .next{color:var(--ink)}
+
+/* 行リスト */
+.rows{padding:2px 0}
+.row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid var(--line-soft);color:inherit;min-height:52px}
+.row:first-child{border-top:0}
+button.row{width:100%;text-align:left}
+.row:where(a,button):hover{background:var(--card-2)}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:500;line-height:1.45;overflow-wrap:anywhere}
+.row .t small{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+.row .s{font-size:12.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.row .amt{font-family:var(--f-mono);font-weight:600;white-space:nowrap}
+.row.done .t{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--line)}
+
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);flex:none;display:grid;place-items:center;background:var(--card)}
+.chk svg{width:15px;height:15px;opacity:0;color:var(--on-acc)}
+.chk.on{background:var(--pcb);border-color:var(--pcb)}
+.chk.on svg{opacity:1;color:var(--card)}
+
+.due{font-family:var(--f-mono);font-size:12px;white-space:nowrap;color:var(--muted);text-align:right}
+.due.over{color:var(--bad);font-weight:600}
+.due.soon{color:var(--warn);font-weight:600}
+.due small{display:block;font-size:11px;color:var(--faint);font-weight:400}
+
+/* 作品の詳細 */
+.phead{padding:16px 16px 14px}
+.phead .st{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.phead h2{margin:0 0 4px;font-size:20px;line-height:1.4}
+.phead .pr{display:flex;align-items:center;gap:12px;margin-top:12px}
+.phead .pr .bar{flex:1;height:8px;border-radius:4px}
+.phead .pr .n{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--muted)}
+.seg{display:flex;gap:2px;background:var(--sunken);border-radius:11px;padding:3px;margin:14px 0 4px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg a{flex:1 0 auto;text-align:center;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+.seg a.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg a b{font-family:var(--f-mono);font-size:11px;color:var(--faint);font-weight:500;margin-left:3px}
+@media (max-width:420px){ .seg a{padding:7px 7px;font-size:12.5px} .seg a b{margin-left:1px} }
+
+.dl{display:grid;gap:0;margin:0}
+.dl > div{padding:12px 16px;border-top:1px solid var(--line-soft)}
+.dl > div:first-child{border-top:0}
+.dl dt{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.dl dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.dl dd.none{color:var(--faint)}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:12px;padding:1px 8px;border-radius:6px;background:var(--sunken);color:var(--muted)}
+table.spec{width:100%;border-collapse:collapse;font-size:14px}
+table.spec th,table.spec td{border-top:1px solid var(--line-soft);padding:8px 12px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+table.spec tr:first-child th,table.spec tr:first-child td{border-top:0}
+table.spec th{width:38%;color:var(--muted);font-weight:500;background:var(--card-2)}
+table.spec td{font-family:var(--f-mono);font-size:13.5px}
+
+.total{display:flex;align-items:baseline;gap:10px;padding:14px 16px;flex-wrap:wrap}
+.total .v{font-family:var(--f-mono);font-size:24px;font-weight:600;letter-spacing:-.02em}
+
+/* 部品表 */
+.grp{margin-top:14px}
+.grp h3{font-size:12.5px;font-weight:700;color:var(--muted);margin:0 2px 6px;display:flex;gap:8px;align-items:baseline;letter-spacing:.04em}
+.grp h3 b{font-family:var(--f-mono);font-weight:500;color:var(--faint)}
+.grp h3 .sp{flex:1}
+.userow{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-top:1px solid var(--line-soft);min-height:56px}
+.userow:first-child{border-top:0}
+.userow > .main{flex:1;min-width:0;text-align:left}
+.userow .t{font-weight:500;line-height:1.45;overflow-wrap:anywhere}
+.userow .t small{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+.userow .s{font-size:12.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.userow.fin .t{color:var(--muted)}
+.lab{color:var(--cu)}
+.lab.short{color:var(--bad)}
+.stbtn{flex:none;min-width:84px;height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.stbtn:hover{filter:brightness(.97)}
+.stbtn svg{width:13px;height:13px}
+.stbtn.s-要購入{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.stbtn.s-注文済み{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.stbtn.s-手元にある{background:var(--acc-soft);color:var(--acc-ink);border-color:transparent}
+.stbtn.s-取り付け済み{background:var(--pcb-soft);color:var(--pcb);border-color:transparent}
+.qty{display:flex;align-items:center;gap:2px;flex:none}
+.qty .n{min-width:52px;text-align:center;font-family:var(--f-mono);font-weight:600;font-size:14px;line-height:1.1}
+.qty .n small{display:block;font-family:var(--f-body);font-size:10px;color:var(--faint);font-weight:500}
+.qty .n.low{color:var(--bad)}
+
+.banner{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 10px;border-color:color-mix(in srgb,var(--cu) 40%,var(--line));background:color-mix(in srgb,var(--cu-soft) 55%,var(--card))}
+.banner.info{border-color:color-mix(in srgb,var(--acc) 40%,var(--line));background:color-mix(in srgb,var(--acc-soft) 55%,var(--card))}
+.banner .main{flex:1;min-width:0}
+.banner b{font-size:14px}
+.banner .s{font-size:12.5px;color:var(--muted)}
+.linkrows{display:grid;gap:0;border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+.lrow{padding:10px 12px;border-top:1px solid var(--line-soft);display:grid;gap:4px}
+.lrow:first-child{border-top:0}
+.lrow .t{font-weight:600;overflow-wrap:anywhere}
+.lrow .s{font-size:12px;color:var(--muted)}
+.lrow select{width:100%;max-width:100%;border:1px solid var(--line);background:var(--card-2);border-radius:9px;padding:8px 10px;min-height:40px}
+.lrow label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.lrow label input{width:18px;height:18px;accent-color:var(--acc);margin-top:3px;flex:none}
+
+/* 段取り */
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px 10px 16px;border-top:1px solid var(--line-soft)}
+ol.steps li:first-child{border-top:0}
+ol.steps .chk{margin-top:2px}
+ol.steps .main{flex:1;min-width:0;display:flex;gap:8px;text-align:left}
+ol.steps .no{color:var(--acc-ink);font-weight:600;min-width:20px;font-family:var(--f-mono)}
+ol.steps .tx{display:grid;gap:2px;min-width:0}
+ol.steps .t{font-weight:500;overflow-wrap:anywhere}
+ol.steps .b{font-size:13px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+ol.steps .m{font-size:12px;color:var(--faint);font-family:var(--f-mono)}
+ol.steps .caution{color:var(--warn);font-weight:700;font-size:12px}
+ol.steps li.done .t{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--line)}
+ol.steps .mv{display:flex;flex-direction:column;gap:2px;flex:none}
+ol.steps .mv button{width:26px;height:22px;border-radius:6px;color:var(--faint);font-size:12px}
+ol.steps .mv button:hover:not(:disabled){background:var(--sunken);color:var(--ink)}
+ol.steps .mv button:disabled{opacity:.25}
+.prep{padding:12px 16px;display:grid;gap:6px}
+.prep .ln{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.prep .ln b{min-width:86px;font-size:12px;color:var(--muted);font-weight:700}
+.prep .ln span{flex:1;min-width:0;overflow-wrap:anywhere}
+.okline{color:var(--pcb);font-weight:600}
+.sess .d{width:74px;flex:none;font-family:var(--f-mono);font-size:12.5px;line-height:1.35}
+.sess .d small{display:block;color:var(--muted);font-size:11px}
+.sentmark{font-size:11px;color:var(--faint);white-space:nowrap}
+
+/* 記録 */
+.logadd{padding:12px 16px;display:grid;gap:8px}
+.logadd textarea{min-height:70px}
+.tl{padding:6px 16px 10px}
+.tl .it{position:relative;padding:8px 0 12px 20px;border-left:2px solid var(--line-soft);margin-left:5px}
+.tl .it::before{content:"";position:absolute;left:-6px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--card);border:2px solid var(--acc)}
+.tl .it.mt::before{border-color:var(--pcb)}
+.tl .it .d{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.tl .it .x{white-space:pre-wrap;overflow-wrap:anywhere}
+.tl .it > button{position:absolute;right:0;top:6px;color:var(--faint);font-size:12px}
+.photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.photos img,.photos .ph{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line-soft);background:var(--sunken);cursor:zoom-in;display:block}
+.pend{display:flex;gap:6px;flex-wrap:wrap}
+.pend .pi{position:relative}
+.pend img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line-soft);display:block}
+.pend button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:11px;background:var(--ink);color:var(--bg);font-size:12px;line-height:22px}
+
+.lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);overflow:auto;display:grid;place-items:center}
+.lightbox img{max-width:100vw;max-height:100vh;display:block}
+.lightbox .x{position:fixed;top:calc(env(safe-area-inset-top) + 10px);right:12px;width:40px;height:40px;border-radius:20px;background:rgba(255,255,255,.16);color:#fff;font-size:20px;z-index:2}
+
+/* 在庫（研究デスクの台帳） */
+.search{position:relative;margin-bottom:10px}
+.search input{width:100%;height:42px;border-radius:11px;border:1px solid var(--line);background:var(--card);padding:0 12px 0 38px;font-size:15px}
+.search svg{position:absolute;left:12px;top:11px;width:19px;height:19px;color:var(--faint)}
+.toolbar{display:flex;gap:8px;align-items:center;margin:8px 0 2px;flex-wrap:wrap}
+.toolbar .sp{flex:1}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
+.toggle input{accent-color:var(--acc);width:16px;height:16px}
+.srcnote{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:0 0 10px;flex-wrap:wrap}
+.srcnote .dot{width:8px;height:8px;border-radius:50%;background:var(--pcb);flex:none}
+.srcnote .dot.off{background:var(--faint)}
+.pick{max-height:50vh;overflow:auto;border:1px solid var(--line-soft);border-radius:10px;margin-top:8px}
+
+/* iOS Safari は 16px 未満の入力欄にフォーカスすると画面を拡大するので、入力欄はすべて 16px 以上 */
+input,select,textarea{font-size:16px!important}
+.form,.fld,.panel{min-width:0;max-width:100%}
+.fld input,.fld select,.fld textarea{min-width:0;max-width:100%;display:block}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;text-align:left}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left}
+
+/* 同期ボタン */
+.iconbtn.sync{margin-right:-8px}
+.iconbtn.sync .ok,.iconbtn.sync .bang{display:none}
+.iconbtn.sync.ok .ok{display:inline;color:var(--pcb)}
+.iconbtn.sync.ok{color:var(--pcb)}
+.iconbtn.sync.syncing{color:var(--acc-ink);animation:pulse 1.2s ease-in-out infinite}
+.iconbtn.sync.login,.iconbtn.sync.error{color:var(--bad)}
+.iconbtn.sync.login .bang,.iconbtn.sync.error .bang{display:inline}
+.iconbtn.sync.offline{color:var(--faint)}
+@keyframes pulse{50%{opacity:.35}}
+
+.fld input[readonly]{background:var(--sunken);font-family:var(--f-mono);font-weight:600;color:var(--ink)}
+
+/* シート */
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;touch-action:pan-y pinch-zoom;overscroll-behavior:contain}
+.sheet .scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;transition:opacity .2s}
+.sheet .panel{position:relative;width:100%;max-width:640px;max-height:92vh;overflow-x:hidden;overflow-y:auto;touch-action:pan-y pinch-zoom;background:var(--card);
+  border-radius:18px 18px 0 0;box-shadow:var(--shadow-lift);transform:translateY(24px);opacity:0;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .2s;
+  padding:8px 18px calc(18px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+.sheet.open .scrim{opacity:1}
+.sheet.open .panel{transform:none;opacity:1}
+@media (min-width:700px){ .sheet{align-items:center} .sheet .panel{border-radius:18px;max-height:86vh;padding-bottom:18px} }
+.panel .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:2px auto 10px}
+.panel h2{font-size:17px;margin:0 0 14px}
+.form{display:flex;flex-wrap:wrap;gap:12px}
+.fld{flex:1 1 100%;display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.half{flex:1 1 calc(50% - 6px)}
+.fld.third{flex:1 1 calc(33% - 8px)}
+.fld > span{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.fld small{font-size:11.5px;color:var(--faint)}
+.fld input:not([type=checkbox]),.fld select,.fld textarea,.logadd textarea,.logadd input{
+  width:100%;border:1px solid var(--line);background:var(--card-2);border-radius:9px;padding:9px 11px;font-size:15px;min-height:42px}
+.fld textarea,.logadd textarea{resize:vertical;line-height:1.55}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.logadd textarea:focus,.search input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.fld.check{flex-direction:row;align-items:center;gap:9px}
+.fld.check input{width:18px;height:18px;accent-color:var(--acc)}
+.fld.check > span{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:0}
+.formbtns{display:flex;gap:8px;margin-top:18px;align-items:center;flex-wrap:wrap}
+.formbtns .sp{flex:1}
+.infobox{background:var(--card-2);border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:14px}
+.infobox b{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.infobox .ln{padding:4px 0;border-top:1px solid var(--line-soft)}
+.infobox .ln:first-of-type{border-top:0}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 84px);transform:translateX(-50%) translateY(10px);
+  background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+.setrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line-soft)}
+.setrow:first-child{border-top:0}
+.setrow .main{flex:1;min-width:0}
+.setrow .s{font-size:12.5px;color:var(--muted)}
+.setrow select{border:1px solid var(--line);background:var(--card-2);border-radius:8px;padding:6px 8px}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap" id="topbar"></div></header>
+<main><div class="wrap" id="view"></div></main>
+
+<nav class="tabs" aria-label="メインメニュー"><div class="wrap">
+  <a href="#/" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17a1.4 1.4 0 0 0 2 2l5.2-5.2a4 4 0 0 0 5.3-5.3l-2.4 2.4-2-2z"/><path d="M15 15l4 4M17.5 13.5l3 3"/></svg>自作</a>
+  <a href="#/plan" data-nav="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5l2 2 4-4"/></svg>予定</a>
+  <a href="#/shop" data-nav="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2.2 11h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg>買い物<span class="badge" id="shopBadge" hidden></span></a>
+  <a href="#/parts" data-nav="parts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 6V3M12 6V3M15 6V3M9 21v-3M12 21v-3M15 21v-3M6 9H3M6 12H3M6 15H3M21 9h-3M21 12h-3M21 15h-3"/></svg>部品・工具</a>
+  <a href="#/settings" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>設定</a>
+</div></nav>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="scrim" data-act="closeSheet"></div>
+  <div class="panel" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<input type="file" id="labFile" accept="application/json,.json" hidden>
+<input type="file" id="photoFile" accept="image/*" multiple hidden>
+<div class="lightbox" id="lightbox" hidden><button class="x" data-lb="close" aria-label="閉じる">✕</button><img id="lbImg" alt=""></div>
+
+<script>
+'use strict';
+/* ============================================================
+   データ
+   作品（builds）ごとに、仕様・部品と工具（bom）・手順（steps）・
+   作業日（sessions）・メンテナンス（maint）・記録（logs）を持つ。
+   ============================================================ */
+var KEY = 'maker-desk-v1';
+var KINDS = ['電子工作','スマートホーム','自作PC','DIY・木工','3Dプリント','修理・改造','その他'];
+var STATUSES = ['アイデア','段取り中','製作中','稼働中','保留','引退'];
+var ACTIVE = ['段取り中','製作中'];
+/* 分類は研究デスクの台帳と同じものに、自作PC向けの「PCパーツ」を足したもの */
+var INV_CATS = ['マイコン・ボード','センサ','表示・LED','モーター・駆動','電源・電池','受動部品','半導体・IC','通信モジュール','コネクタ・配線','基板・ブレッドボード','工具','計測器','材料・消耗品','その他'];
+var BOM_CATS = INV_CATS.slice(0, -1).concat(['PCパーツ','その他']);
+var TOOL_CATS = ['工具','計測器'];
+var INUSE_CATS = ['工具','計測器','材料・消耗品'];
+var PART_STATES = ['要購入','注文済み','手元にある','取り付け済み'];
+var TOOL_STATES = ['要購入','注文済み','手元にある'];
+var LAB_URL = '../lab-desk/';
+
+var DB = load();
+var UI = { filter:'すべて', kind:'すべて', partsQ:'', partsCat:'すべて', partsMine:false, lastRoute:'', pend:[] };
+
+function blank(){ return { v:1, builds:[], deleted:{}, settings:{ theme:'auto' } }; }
+function load(){
+  try{
+    var d = JSON.parse(localStorage.getItem(KEY));
+    if(d && d.v) return normalize(d);
+  }catch(e){}
+  return blank();
+}
+function normalize(d){
+  d.builds = Array.isArray(d.builds) ? d.builds : [];
+  d.settings = d.settings || { theme:'auto' };
+  d.deleted = d.deleted && typeof d.deleted === 'object' && !Array.isArray(d.deleted) ? d.deleted : {};
+  d.builds.forEach(function(b){
+    ['tags','specs','bom','steps','sessions','maint','logs'].forEach(function(k){ if(!Array.isArray(b[k])) b[k] = []; });
+    if(STATUSES.indexOf(b.status) < 0) b.status = 'アイデア';
+    if(!b.kind) b.kind = 'その他';
+    b.bom.forEach(function(x){
+      if(!x.role) x.role = TOOL_CATS.indexOf(x.cat) >= 0 ? 'tool' : 'part';
+      if(!x.state) x.state = '要購入';
+      if(x.role === 'tool' && x.state === '取り付け済み') x.state = '手元にある';
+    });
+    b.maint.forEach(function(m){ if(!Array.isArray(m.history)) m.history = []; });
+    b.logs.forEach(function(l){ if(!Array.isArray(l.photos)) l.photos = []; });
+  });
+  delete d.files;
+  return d;
+}
+function save(){
+  stampChanges();
+  DB.savedAt = Date.now();
+  try{ localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch(e){ toast('保存できませんでした（ストレージの空きを確認してください）'); }
+  if(typeof syncSoon === 'function') syncSoon();
+}
+
+/* ============================================================
+   小道具
+   ============================================================ */
+function $(s, r){ return (r || document).querySelector(s); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function isoOf(d){ d = new Date(d); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function todayISO(){ return isoOf(new Date()); }
+function addDays(n){ var d = new Date(); d.setDate(d.getDate() + n); return isoOf(d); }
+function addDaysTo(iso, n){ var d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return isoOf(d); }
+function yen(n){ return '¥' + Math.round(+n || 0).toLocaleString('ja-JP'); }
+function num(n){ return (+n || 0).toLocaleString('ja-JP'); }
+function fmtDate(iso){ if(!iso) return ''; var a = iso.split('-'); return a[0] + '/' + (+a[1]) + '/' + (+a[2]); }
+function fmtShort(iso){ if(!iso) return ''; var a = iso.split('-'); return (+a[1]) + '/' + (+a[2]); }
+function wday(iso){ return '日月火水木金土'.charAt(new Date(iso + 'T00:00:00').getDay()); }
+function daysUntil(iso){ return Math.round((new Date(iso + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 864e5); }
+function dueLabel(iso){
+  if(!iso) return { t:'日付未定', c:'' };
+  var n = daysUntil(iso);
+  if(n < 0) return { t: fmtShort(iso) + '（' + (-n) + '日過ぎ）', c:'over' };
+  if(n === 0) return { t:'今日', c:'soon' };
+  if(n === 1) return { t:'明日', c:'soon' };
+  if(n <= 7) return { t: fmtShort(iso) + '（あと' + n + '日）', c:'soon' };
+  return { t: fmtDate(iso), c:'' };
+}
+function splitTags(s){ return String(s || '').split(/[,、，\s]+/).map(function(t){ return t.trim().replace(/^#/, ''); }).filter(Boolean); }
+function lines(t){ return String(t || '').split('\n').map(function(x){ return x.trim(); }).filter(Boolean); }
+function normName(x){ return String(x || '').normalize('NFKC').toLowerCase().replace(/[\s・\-_\/()（）]/g, ''); }
+function getB(id){ return DB.builds.find(function(b){ return b.id === id; }); }
+function touch(b){ b.updatedAt = new Date().toISOString(); }
+function short(t, n){ t = String(t || ''); n = n || 16; return t.length > n ? t.slice(0, n) + '…' : t; }
+
+var toastT;
+function toast(msg){
+  var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+var I = {
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>',
+  yen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l6 8 6-8M12 12v8M7.5 13h9M7.5 16.5h9"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  chip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 7V4M14 7V4M10 20v-3M14 20v-3M7 10H4M7 14H4M20 10h-3M20 14h-3"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17a1.4 1.4 0 0 0 2 2l5.2-5.2a4 4 0 0 0 5.3-5.3l-2.4 2.4-2-2z"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
+};
+
+/* ============================================================
+   シート（フォーム）
+   ============================================================ */
+var LOCK_Y = 0;
+function lockScroll(on){
+  var b = document.body;
+  if(on){
+    if(b.classList.contains('lock')) return;
+    LOCK_Y = window.scrollY; b.style.top = (-LOCK_Y) + 'px'; b.classList.add('lock');
+  }else{
+    if(!b.classList.contains('lock') || $('#sheet').classList.contains('open')) return;
+    b.classList.remove('lock'); b.style.top = ''; window.scrollTo(0, LOCK_Y);
+  }
+}
+function openSheet(html, onMount){
+  var s = $('#sheet');
+  $('#sheetBody').innerHTML = html;
+  s.hidden = false;
+  lockScroll(true);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ s.classList.add('open'); }); });
+  if(onMount) onMount($('#sheetBody'));
+}
+function closeSheet(){
+  var s = $('#sheet');
+  if(s.hidden) return;
+  s.classList.remove('open');
+  lockScroll(false);
+  setTimeout(function(){ if(!s.classList.contains('open')){ s.hidden = true; $('#sheetBody').innerHTML = ''; } }, 230);
+}
+/* シートを閉じてから別のシートを開く */
+function nextSheet(fn){ closeSheet(); setTimeout(fn, 240); }
+
+function fieldHTML(f, v){
+  var id = 'f_' + f.k, val = (v === undefined || v === null) ? (f.def !== undefined ? f.def : '') : v;
+  var ph = f.ph ? ' placeholder="' + esc(f.ph) + '"' : '';
+  var inp;
+  if(f.type === 'textarea'){
+    inp = '<textarea id="' + id + '" name="' + f.k + '" rows="' + (f.rows || 3) + '"' + ph + '>' + esc(val) + '</textarea>';
+  }else if(f.type === 'select'){
+    inp = '<select id="' + id + '" name="' + f.k + '">' + f.options.map(function(o){
+      if(o && o.group) return '<optgroup label="' + esc(o.group) + '">' + o.items.map(function(x){ return '<option value="' + esc(x[0]) + '"' + (x[0] === val ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</optgroup>';
+      var ov = Array.isArray(o) ? o[0] : o, ol = Array.isArray(o) ? o[1] : o;
+      return '<option value="' + esc(ov) + '"' + (ov === val ? ' selected' : '') + '>' + esc(ol) + '</option>';
+    }).join('') + '</select>';
+  }else if(f.type === 'check'){
+    return '<label class="fld check"><input type="checkbox" id="' + id + '" name="' + f.k + '"' + (val ? ' checked' : '') + '><span>' + esc(f.label) + '</span></label>';
+  }else{
+    var type = f.type === 'tags' ? 'text' : (f.type || 'text');
+    if(f.type === 'tags' && Array.isArray(val)) val = val.join(', ');
+    var extra = type === 'number' ? ' inputmode="decimal" step="any"' : '';
+    if(f.list) extra += ' list="dl_' + f.k + '"';
+    inp = '<input type="' + type + '" id="' + id + '" name="' + f.k + '" value="' + esc(val) + '"' + ph + extra + (f.ro ? ' readonly tabindex="-1"' : '') + '>';
+    if(f.list) inp += '<datalist id="dl_' + f.k + '">' + f.list.map(function(o){ return '<option value="' + esc(o) + '">'; }).join('') + '</datalist>';
+  }
+  return '<label class="fld' + (f.w ? ' ' + f.w : '') + '"><span>' + esc(f.label) + (f.req ? ' *' : '') + '</span>' + inp + (f.hint ? '<small>' + esc(f.hint) + '</small>' : '') + '</label>';
+}
+
+/* opts: title, fields, values, top(html), bottom(html), onSave(vals)→false で閉じない, onDelete, delLabel, delConfirm, mount */
+function formSheet(opts){
+  var v = opts.values || {};
+  var html = '<h2>' + esc(opts.title) + '</h2>' + (opts.top || '') +
+    '<form class="form" id="sheetForm" autocomplete="off">' +
+    opts.fields.map(function(f){ return fieldHTML(f, v[f.k]); }).join('') +
+    '</form>' + (opts.bottom || '') +
+    '<div class="formbtns">' +
+      (opts.onDelete ? '<button type="button" class="btn danger" id="sheetDel">' + esc(opts.delLabel || '削除') + '</button>' : '') +
+      '<span class="sp"></span><button type="button" class="btn" data-act="closeSheet">キャンセル</button>' +
+      '<button type="submit" form="sheetForm" class="btn pri">保存</button>' +
+    '</div>';
+  openSheet(html, function(root){
+    var form = $('#sheetForm', root);
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var out = {};
+      opts.fields.forEach(function(f){
+        var el = form.elements[f.k];
+        if(!el || f.skip) return;
+        if(f.type === 'check') out[f.k] = el.checked;
+        else if(f.type === 'number') out[f.k] = el.value === '' ? '' : +el.value;
+        else if(f.type === 'tags') out[f.k] = splitTags(el.value);
+        else out[f.k] = el.value.trim();
+      });
+      for(var i = 0; i < opts.fields.length; i++){
+        var f = opts.fields[i];
+        if(f.req && !out[f.k] && out[f.k] !== 0){ toast(f.label + 'を入力してください'); form.elements[f.k].focus(); return; }
+      }
+      if(opts.onSave(out) !== false) closeSheet();
+    });
+    if(opts.onDelete) $('#sheetDel', root).addEventListener('click', function(){
+      if(confirm(opts.delConfirm || '削除しますか？')){ opts.onDelete(); closeSheet(); }
+    });
+    if(opts.mount) opts.mount(root, form);
+    var first = form.querySelector('input:not([type=checkbox]),textarea');
+    if(first && !opts.values && window.matchMedia('(pointer:fine)').matches) first.focus();
+  });
+}
+
+/* ============================================================
+   研究デスク（lab-desk）の部品・工具の台帳とのつながり
+   ・同じブラウザなら、研究デスクのデータ（localStorage）をそのまま読む
+     （どちらも kuru77.github.io にあるので同じ保存場所を見られる）
+   ・Google 同期をしていれば、同じアプリ専用領域にある lab-desk.json も読む
+     （ホーム画面に追加した iPhone はアプリごとに保存場所が分かれるため）
+   ・どちらもなければ、研究デスクのバックアップ JSON を読み込める
+   台帳は読むだけで、こちらから書き換えることはない。
+   作品の部品は invId で台帳の部品を指し、研究デスク側も同じ方法で
+   「自作デスクのどの作品で使っているか」をたどれる。
+   ============================================================ */
+var LAB_KEY = 'lab-desk-v1', LAB_CACHE = 'maker-desk-lab';
+var LAB = { db:null, src:'', at:0, got:0 };
+
+function labStamp(d){
+  var m = 0;
+  function t(r){ if(r && +r._u > m) m = +r._u; }
+  (d.inventory || []).forEach(function(i){ t(i); (i.purchases || []).forEach(t); });
+  (d.projects || []).forEach(function(p){ t(p); (p.uses || []).forEach(t); });
+  return m;
+}
+/* 台帳と、使用数の計算に要る研究の備品だけを残す */
+function slimLab(d){
+  return {
+    inventory: (d.inventory || []).filter(function(i){ return i && i.id; }),
+    projects: (d.projects || []).map(function(p){ return { id:p.id, title:p.title, status:p.status, _u:p._u, uses:(p.uses || []).map(function(u){ return { id:u.id, invId:u.invId, qty:u.qty, usedN:u.usedN, used:u.used, usedDate:u.usedDate, _u:u._u }; }) }; })
+  };
+}
+function loadLab(){
+  var c = [];
+  try{
+    var d = JSON.parse(localStorage.getItem(LAB_KEY));
+    if(d && Array.isArray(d.inventory)) c.push({ db:slimLab(d), src:'local', at:labStamp(d), got:Date.now() });
+  }catch(e){}
+  try{
+    var k = JSON.parse(localStorage.getItem(LAB_CACHE));
+    if(k && k.db && Array.isArray(k.db.inventory)) c.push({ db:k.db, src:k.src, at:labStamp(k.db), got:k.got || 0 });
+  }catch(e){}
+  c.sort(function(a, b){ return (b.at - a.at) || (a.src === 'local' ? -1 : 1); });
+  LAB = c[0] || { db:null, src:'', at:0, got:0 };
+}
+function setLabCache(d, src){
+  try{ localStorage.setItem(LAB_CACHE, JSON.stringify({ db:slimLab(d), src:src, got:Date.now() })); }catch(e){}
+  loadLab();
+}
+function labSrcLabel(){
+  if(!LAB.db) return '研究デスクの台帳はまだ読み込まれていません';
+  var s = { local:'この端末の研究デスクから', drive:'Google ドライブの同期データから', file:'バックアップファイルから' }[LAB.src] || '';
+  return s + '読み込み中' + (LAB.at ? '（研究デスクの最終更新 ' + agoLabel(LAB.at) + '）' : '');
+}
+function labInv(){ return LAB.db ? LAB.db.inventory : []; }
+function labItem(id){ return id ? labInv().find(function(i){ return i.id === id; }) : null; }
+function labIsTool(it){ return !!it && ((it.useMode) || (INUSE_CATS.indexOf(it.category) >= 0 ? 'inuse' : 'consume')) === 'inuse'; }
+function lUseQ(u){ return Math.max(1, +u.qty || 1); }
+function lUseN(u){ var n = u.usedN != null ? +u.usedN : (u.used ? lUseQ(u) : 0); return Math.max(0, Math.min(lUseQ(u), n || 0)); }
+/* 研究での使用（研究デスクの研究ページで登録したもの） */
+function labUsesOf(invId){
+  var out = [];
+  if(LAB.db) LAB.db.projects.forEach(function(p){ (p.uses || []).forEach(function(u){ if(u.invId === invId) out.push({ p:p, u:u }); }); });
+  return out;
+}
+/* 自作デスクの作品で取り付け済みにした数（部品として使い切るもの） */
+function makerInstalled(invId){
+  var n = 0;
+  DB.builds.forEach(function(b){ b.bom.forEach(function(x){ if(x.invId === invId && x.role !== 'tool' && x.state === '取り付け済み') n += Math.max(1, +x.qty || 1); }); });
+  return n;
+}
+function makerUsesOf(invId){
+  var out = [];
+  DB.builds.forEach(function(b){ b.bom.forEach(function(x){ if(x.invId === invId) out.push({ b:b, x:x }); }); });
+  return out;
+}
+/* 研究デスクと同じ考え方で数える。部品：未使用 = 総数 − 研究で使用済み − 作品に取り付け済み。
+   工具：空き = 総数 − 進行中の研究で使用中 */
+function labUsedQty(it){
+  if(labIsTool(it)) return 0;
+  var n = 0;
+  labUsesOf(it.id).forEach(function(x){ n += lUseN(x.u); });
+  return n + makerInstalled(it.id);
+}
+function labInUseQty(it){
+  if(!labIsTool(it)) return 0;
+  var n = 0;
+  labUsesOf(it.id).forEach(function(x){ if(x.p.status !== '完了') n += lUseN(x.u); });
+  return n;
+}
+function labUnused(it){ return Math.max(0, (+it.qty || 0) - labUsedQty(it) - labInUseQty(it)); }
+function labLow(it){ return it.minQty !== '' && it.minQty != null && labUnused(it) <= +it.minQty; }
+function labLink(id){ return LAB_URL + '#/inv/' + encodeURIComponent(id); }
+/* 品名・型番から台帳の同じ部品を探す（全角半角・空白・記号の違いは無視） */
+function matchLab(name, model){
+  var inv = labInv();
+  if(!inv.length) return '';
+  var n = normName(name), mo = normName(model);
+  if(n.length < 2 && mo.length < 3) return '';
+  var hit = inv.find(function(it){
+    var a = normName(it.name), m = normName(it.model);
+    if(mo && m && mo === m) return true;
+    return a === n || a + m === n || m + a === n || (mo && a + m === n + mo);
+  });
+  if(!hit) hit = inv.find(function(it){ var m = normName(it.model); return m.length >= 3 && (n.indexOf(m) >= 0 || (mo && mo.indexOf(m) >= 0)); });
+  return hit ? hit.id : '';
+}
+function labOptions(){
+  var list = labInv().slice().sort(function(a, b){ return (a.category || '').localeCompare(b.category || '', 'ja') || a.name.localeCompare(b.name, 'ja'); });
+  var groups = {};
+  list.forEach(function(i){ (groups[i.category || 'その他'] = groups[i.category || 'その他'] || []).push([i.id, i.name + (i.model ? ' ' + i.model : '') + '（' + (labIsTool(i) ? '空き ' : '未使用 ') + num(labUnused(i)) + (i.unit || '個') + '）']); });
+  return [['', 'つながない']].concat(Object.keys(groups).map(function(g){ return { group:g, items:groups[g] }; }));
+}
+
+/* ============================================================
+   作品の集計
+   ============================================================ */
+function isToolX(x){ return x.role === 'tool'; }
+function haveIt(x){ return x.state === '手元にある' || x.state === '取り付け済み'; }
+function bomCost(b){ return b.bom.reduce(function(s, x){ return s + (x.price === '' || x.price == null ? 0 : +x.price * Math.max(1, +x.qty || 1)); }, 0); }
+function toBuyCost(list){ return list.reduce(function(s, x){ return s + (x.price === '' || x.price == null ? 0 : +x.price * Math.max(1, +x.qty || 1)); }, 0); }
+function stepProg(b){
+  var n = b.steps.length, d = b.steps.filter(function(s){ return s.done; }).length;
+  return { n:n, d:d, pct: n ? Math.round(d / n * 100) : (b.status === '稼働中' || b.status === '引退' ? 100 : 0) };
+}
+function readiness(b){
+  var n = b.bom.length, d = b.bom.filter(haveIt).length;
+  return { n:n, d:d };
+}
+function upcomingSessions(b){
+  return b.sessions.filter(function(s){ return !s.done; }).sort(function(a, c){ return ((a.date || '9999') + (a.start || '')) < ((c.date || '9999') + (c.start || '')) ? -1 : 1; });
+}
+function maintDue(b, m){
+  if(!(+m.every > 0)) return '';
+  var base = m.last || b.doneDate || (b.createdAt || '').slice(0, 10) || todayISO();
+  return addDaysTo(base, +m.every);
+}
+/* 研究デスクの在庫で足りるのに「要購入」になっているもの */
+function coveredByLab(x){
+  var it = labItem(x.invId);
+  return !!(it && x.state === '要購入' && labUnused(it) >= Math.max(1, +x.qty || 1));
+}
+function unlinkedMatches(b){
+  if(!LAB.db) return [];
+  return b.bom.filter(function(x){ return !x.invId && !x.noLab && matchLab(x.name, x.model); });
+}
+
+/* ============================================================
+   作品のひな形（種類ごとの手順・道具・仕様の項目）
+   ============================================================ */
+var TEMPLATES = {
+  '電子工作': {
+    steps:[['やりたいことと回路を決める', 30], ['部品を選んで揃える', 30], ['ブレッドボードで試作', 90], ['プログラムを書いて動作確認', 90], ['基板にはんだ付け', 90, true], ['ケースに組み込む', 60], ['設置して動作確認', 30]],
+    tools:[['はんだごて','工具'], ['テスター','計測器'], ['ニッパー','工具'], ['はんだ','材料・消耗品']],
+    specs:['電源', 'マイコン', '消費電流', '通信'], maint:[]
+  },
+  'スマートホーム': {
+    steps:[['つなぐ機器と自動化したいことを決める', 30], ['部品と機器を揃える', 30], ['ファームウェアを書き込む', 45], ['Wi-Fi・ホームアプリに登録', 30], ['自動化のルールを作る', 45], ['設置して数日様子を見る', 15]],
+    tools:[['テスター','計測器'], ['USB ケーブル（データ通信用）','コネクタ・配線']],
+    specs:['設置場所', 'IP アドレス', 'MAC アドレス', '接続先（Wi-Fi・ハブ）', 'ファームウェア', '管理画面の URL'],
+    maint:[['ファームウェアの更新を確認', 90]]
+  },
+  '自作PC': {
+    parts:['CPU','マザーボード','メモリ','ストレージ（SSD）','グラフィックボード','電源ユニット','PC ケース','CPU クーラー','OS'],
+    steps:[['パーツの互換性を確認（ソケット・メモリ規格・電源容量・ケースのサイズ）', 30], ['CPU・メモリ・M.2 SSD をマザーボードに取り付け', 30, true], ['最小構成で起動確認（BIOS が出るか）', 20], ['ケースに組み込んで配線', 60], ['OS とドライバをインストール', 60], ['BIOS 設定（XMP/EXPO など）', 15], ['ベンチマークと温度の確認', 30]],
+    tools:[['プラスドライバー（#2）','工具'], ['結束バンド','材料・消耗品']],
+    specs:['CPU', 'メモリ', 'ストレージ', 'GPU', '電源', 'BIOS バージョン', 'OS'],
+    maint:[['ホコリの掃除', 90], ['BIOS・ドライバの更新を確認', 180]]
+  },
+  'DIY・木工': {
+    steps:[['採寸して図面を描く', 45], ['木取り表（カット寸法）を作る', 30], ['材料を買う・カットしてもらう', 60], ['穴あけ・下穴', 30], ['組み立て', 60], ['塗装・仕上げ', 60, true], ['設置', 30]],
+    tools:[['メジャー','工具'], ['インパクトドライバー','工具'], ['のこぎり','工具'], ['サンドペーパー','材料・消耗品']],
+    specs:['寸法（幅×奥行×高さ）', '材料', '耐荷重の目安', '塗料'],
+    maint:[['ネジの緩みを点検', 180]]
+  },
+  '3Dプリント': {
+    steps:[['モデリング', 90], ['スライス設定', 20], ['印刷', 180], ['サポート除去・仕上げ', 30], ['組み付け・試用', 20]],
+    tools:[['ニッパー','工具'], ['スクレーパー','工具']],
+    specs:['フィラメント', 'ノズル径・積層ピッチ', '充填率', '造形時間', 'データの保存先'], maint:[]
+  },
+  '修理・改造': {
+    steps:[['症状を確認して記録する', 15], ['分解（写真を撮りながら）', 30], ['原因を特定する', 45], ['部品を交換・修理する', 60, true], ['組み立てて動作確認', 30]],
+    tools:[['精密ドライバー','工具'], ['テスター','計測器'], ['ヘラ・オープナー','工具']],
+    specs:['機種・型番', '症状', '原因', '交換した部品'], maint:[]
+  }
+};
+function applyTemplate(b){
+  var t = TEMPLATES[b.kind];
+  if(!t) return;
+  (t.steps || []).forEach(function(s){ b.steps.push({ id:uid(), title:s[0], mins:s[1] || '', caution:!!s[2], body:'', done:false }); });
+  (t.parts || []).forEach(function(n){ b.bom.push(newBom({ name:n, cat:'PCパーツ', role:'part' })); });
+  (t.tools || []).forEach(function(x){ b.bom.push(newBom({ name:x[0], cat:x[1], role: TOOL_CATS.indexOf(x[1]) >= 0 ? 'tool' : 'part' })); });
+  (t.specs || []).forEach(function(k){ if(!b.specs.some(function(s){ return s.k === k; })) b.specs.push({ k:k, v:'' }); });
+  (t.maint || []).forEach(function(m){ b.maint.push({ id:uid(), title:m[0], every:m[1], last:'', note:'', history:[] }); });
+}
+/* 部品表の 1 行。台帳に同じものがあればつなぎ、空きがあれば「手元にある」にする */
+function newBom(o){
+  var x = Object.assign({ id:uid(), name:'', model:'', cat:'その他', role:'part', qty:1, unit:'個', price:'', state:'要購入', shop:'', url:'', invId:'', note:'' }, o);
+  if(!x.invId && LAB.db){
+    var m = matchLab(x.name, x.model);
+    if(m){
+      var it = labItem(m);
+      x.invId = m;
+      if(x.state === '要購入' && labUnused(it) >= Math.max(1, +x.qty || 1)) x.state = '手元にある';
+    }
+  }
+  return x;
+}
+
+/* ============================================================
+   フォーム
+   ============================================================ */
+function buildForm(b){
+  var isNew = !b;
+  formSheet({
+    title: isNew ? '自作を追加' : '自作を編集',
+    values: b,
+    fields: [
+      { k:'title', label:'名前', req:true, ph:'例：玄関の CO₂ モニター、洗面所の吊り戸棚、メイン PC' },
+      { k:'kind', label:'種類', type:'select', options:KINDS, def:'電子工作', w:'half' },
+      { k:'status', label:'状態', type:'select', options:STATUSES, def:'アイデア', w:'half' },
+      { k:'summary', label:'目的・どう便利になるか', type:'textarea', rows:3, ph:'困っていること、作ったらどうなるか' },
+      { k:'place', label:'使う場所・設置場所', ph:'例：玄関の靴箱の上', w:'half' },
+      { k:'tags', label:'タグ', type:'tags', ph:'カンマ区切り', w:'half' },
+      { k:'startDate', label:'着手日', type:'date', def: isNew ? todayISO() : '', w:'half' },
+      { k:'targetDate', label:'完成させたい日', type:'date', w:'half' },
+      { k:'doneDate', label:'完成日（稼働を始めた日）', type:'date', w:'half', hint:'メンテナンスの周期はこの日から数えます' },
+      { k:'url', label:'参考ページ・リポジトリ', type:'url', w:'half' },
+      isNew ? { k:'tpl', label:'種類に合わせたひな形（手順・道具・仕様の項目）を入れる', type:'check', def:true } : null
+    ].filter(Boolean),
+    onSave: function(v){
+      if(isNew){
+        var tpl = v.tpl; delete v.tpl;
+        var nb = Object.assign({ id:uid(), specs:[], bom:[], steps:[], sessions:[], maint:[], logs:[], createdAt:new Date().toISOString() }, v);
+        if(tpl) applyTemplate(nb);
+        touch(nb); DB.builds.unshift(nb); save();
+        location.hash = '#/b/' + nb.id;
+      }else{
+        if(v.status === '稼働中' && b.status !== '稼働中' && !v.doneDate) v.doneDate = todayISO();
+        Object.assign(b, v); touch(b); save(); render(true);
+      }
+    },
+    onDelete: isNew ? null : function(){
+      DB.builds = DB.builds.filter(function(x){ return x !== b; });
+      b.logs.forEach(function(l){ l.photos.forEach(dropPhoto); });
+      save(); location.hash = '#/'; toast('削除しました');
+    },
+    delConfirm: '「' + (b ? b.title : '') + '」を削除しますか？ 部品表・段取り・記録・写真もすべて消えます。'
+  });
+}
+
+function specForm(b){
+  formSheet({
+    title:'仕様・設定値',
+    values:{ specs: b.specs.map(function(s){ return s.k ? s.k + '：' + (s.v || '') : s.v; }).join('\n') },
+    top:'<p class="muted small" style="margin:-8px 0 12px">1 行に 1 項目、「項目：値」の形で。IP アドレス・ファームウェアの版・寸法・BIOS 設定など、あとで見返したい値を残しておけます（パスワードは書かないでください）。</p>',
+    fields:[{ k:'specs', label:'仕様', type:'textarea', rows:10, ph:'電源：USB-C 5V\nIP アドレス：192.168.1.42\nファームウェア：v1.2.0' }],
+    onSave:function(v){
+      b.specs = lines(v.specs).map(function(l){
+        var m = l.match(/^([^：:]{1,40})[：:]\s*(.*)$/);
+        return m ? { k:m[1].trim(), v:m[2].trim() } : { k:'', v:l };
+      });
+      touch(b); save(); render(true);
+    }
+  });
+}
+
+function bomForm(b, x, preset){
+  var isNew = !x, v0 = x || Object.assign({ qty:1, unit:'個', state:'要購入', role:'part', cat:'その他' }, preset || {});
+  var labNote = LAB.db ? '' : '<p class="muted small" style="margin:-8px 0 12px">研究デスクの台帳を読み込むと、手持ちの部品とつなげて在庫を確かめられます（設定 → 研究デスクとの連携）。</p>';
+  formSheet({
+    title: isNew ? '部品・工具を追加' : '部品・工具を編集',
+    values: v0,
+    top: labNote,
+    fields: [
+      { k:'name', label:'名前', req:true, ph:'例：ESP32-DevKitC、SPF 1×4 材、Ryzen 7 9700X' },
+      { k:'role', label:'扱い', type:'select', options:[['part','部品・材料（取り付けると減る）'],['tool','工具・道具（使っても残る）']], w:'half' },
+      { k:'cat', label:'分類', type:'select', options:BOM_CATS, w:'half' },
+      { k:'model', label:'型番・規格・寸法', ph:'例：BME280 / 1820mm / DDR5-5600', w:'half' },
+      { k:'state', label:'状態', type:'select', options:PART_STATES, w:'half' },
+      { k:'qty', label:'数', type:'number', w:'third' },
+      { k:'unit', label:'単位', list:['個','本','枚','セット','m','袋','台','巻','缶'], w:'third' },
+      { k:'price', label:'単価（円）', type:'number', w:'third' },
+      { k:'total', label:'合計（単価 × 数）', ro:true, skip:true, w:'half' },
+      { k:'shop', label:'購入先', list: shopList(), w:'half' },
+      { k:'url', label:'商品ページ・データシート URL', type:'url' },
+      LAB.db ? { k:'invId', label:'研究デスクの台帳の部品', type:'select', options:labOptions(), hint:'つなぐと在庫・保管場所が見られ、研究デスク側でもこの作品での使用が見えます' } : null,
+      { k:'note', label:'メモ', type:'textarea', rows:2, ph:'代わりに使えるもの、注意点 など' }
+    ].filter(Boolean),
+    mount: function(root, form){
+      var pr = form.elements.price, q = form.elements.qty, t = form.elements.total;
+      function recalc(){ t.value = pr.value === '' ? '' : yen(+pr.value * (q.value === '' ? 1 : +q.value)); t.placeholder = '単価を入れると計算'; }
+      pr.addEventListener('input', recalc); q.addEventListener('input', recalc); recalc();
+      var role = form.elements.role, cat = form.elements.cat, st = form.elements.state;
+      function syncRole(){ var tool = role.value === 'tool'; st.querySelector('option[value="取り付け済み"]').disabled = tool; if(tool && st.value === '取り付け済み') st.value = '手元にある'; }
+      role.addEventListener('change', syncRole); syncRole();
+      cat.addEventListener('change', function(){ if(isNew) role.value = TOOL_CATS.indexOf(cat.value) >= 0 ? 'tool' : 'part'; syncRole(); });
+      var inv = form.elements.invId;
+      if(inv && inv.tagName === 'SELECT'){
+        var info = document.createElement('div'); info.className = 'small muted'; info.style.marginTop = '-6px'; info.style.flex = '1 1 100%';
+        inv.closest('.fld').after(info);
+        var showInfo = function(){
+          var it = labItem(inv.value);
+          info.innerHTML = it ? '<span class="lab">' + esc(labStockText(it)) + '</span>　<a href="' + esc(labLink(it.id)) + '" target="_blank" rel="noopener">研究デスクで開く ↗</a>' : '';
+        };
+        inv.addEventListener('change', function(){
+          var it = labItem(inv.value);
+          if(it){
+            if(!form.elements.name.value) form.elements.name.value = it.name;
+            if(!form.elements.model.value && it.model) form.elements.model.value = it.model;
+            if(pr.value === '' && it.price) { pr.value = it.price; recalc(); }
+          }
+          showInfo();
+        });
+        /* 新しく追加するときは、名前を入れたら台帳の同じ部品を探して選んでおく */
+        if(isNew && !inv.value){
+          var guess = function(){ if(inv.dataset.touched) return; var m = matchLab(form.elements.name.value, form.elements.model.value); if(m !== inv.value){ inv.value = m; showInfo(); } };
+          form.elements.name.addEventListener('input', guess); form.elements.model.addEventListener('input', guess);
+          inv.addEventListener('change', function(){ inv.dataset.touched = '1'; });
+        }
+        showInfo();
+      }
+    },
+    onSave: function(v){
+      if(v.role === 'tool' && v.state === '取り付け済み') v.state = '手元にある';
+      if(v.invId) delete v.noLab;
+      if(isNew){ var nx = Object.assign({ id:uid() }, v); b.bom.push(nx); }
+      else Object.assign(x, v);
+      touch(b); save(); render(true);
+    },
+    onDelete: isNew ? null : function(){ b.bom = b.bom.filter(function(y){ return y !== x; }); touch(b); save(); render(true); },
+    delConfirm: '部品表から外しますか？（研究デスクの台帳からは消えません）'
+  });
+}
+function labStockText(it){
+  var u = it.unit || '個';
+  return '研究デスク：' + (labIsTool(it) ? '空き ' : '未使用 ') + num(labUnused(it)) + u + ' / 総数 ' + num(it.qty) + u + (it.location ? ' ・ ' + it.location : '');
+}
+function shopList(){
+  var s = {};
+  DB.builds.forEach(function(b){ b.bom.forEach(function(x){ if(x.shop) s[x.shop] = 1; }); });
+  labInv().forEach(function(i){ if(i.shop) s[i.shop] = 1; });
+  ['秋月電子','マルツ','千石電商','スイッチサイエンス','Amazon','モノタロウ','ホームセンター','ツクモ','ドスパラ','パソコン工房'].forEach(function(x){ s[x] = 1; });
+  return Object.keys(s);
+}
+
+function stepForm(b, s){
+  var isNew = !s;
+  formSheet({
+    title: isNew ? '手順を追加' : '手順を編集',
+    values: s,
+    fields: [
+      { k:'title', label:'やること', req:true, ph:'例：基板にはんだ付け' },
+      { k:'body', label:'くわしく・コツ', type:'textarea', rows:3, ph:'寸法、配線の順番、参考にするページ など' },
+      { k:'mins', label:'目安の時間（分）', type:'number', w:'half' },
+      { k:'caution', label:'注意が要る作業（やけど・感電・刃物・塗料など）', type:'check' }
+    ],
+    onSave: function(v){
+      if(isNew) b.steps.push(Object.assign({ id:uid(), done:false }, v));
+      else Object.assign(s, v);
+      touch(b); save(); render(true);
+    },
+    onDelete: isNew ? null : function(){ b.steps = b.steps.filter(function(x){ return x !== s; }); touch(b); save(); render(true); }
+  });
+}
+
+function sessionForm(b, s){
+  var isNew = !s;
+  var todo = b.steps.filter(function(x){ return !x.done; }).slice(0, 3).map(function(x){ return '・' + x.title; }).join('\n');
+  formSheet({
+    title: isNew ? '作業日を決める' : '作業日を編集',
+    values: s,
+    top: '<p class="muted small" style="margin:-8px 0 12px">いつ・何をやるかを決めておくと「予定」にまとまり、カレンダー（.ics）にも追加できます。</p>',
+    fields: [
+      { k:'date', label:'日付', type:'date', req:true, def:addDays(1), w:'half' },
+      { k:'title', label:'予定の名前', def:'作業：' + b.title, w:'half' },
+      { k:'start', label:'開始', type:'time', w:'half', hint:'空欄なら終日' },
+      { k:'end', label:'終了', type:'time', w:'half' },
+      { k:'note', label:'この日にやること', type:'textarea', rows:4, def:todo, ph:'手順から、まだ終わっていないものを入れてあります' },
+      isNew ? null : { k:'done', label:'この作業日は終わった', type:'check' }
+    ].filter(Boolean),
+    onSave: function(v){
+      if(v.start && !v.end){ var h = (+v.start.slice(0, 2) + 2) % 24; v.end = (h < 10 ? '0' : '') + h + v.start.slice(2); }
+      if(isNew) b.sessions.push(Object.assign({ id:uid(), done:false }, v));
+      else Object.assign(s, v);
+      if(isNew && b.status === 'アイデア') b.status = '段取り中';
+      touch(b); save(); render(true);
+    },
+    onDelete: isNew ? null : function(){ b.sessions = b.sessions.filter(function(x){ return x !== s; }); touch(b); save(); render(true); }
+  });
+}
+
+function maintForm(b, m){
+  var isNew = !m;
+  formSheet({
+    title: isNew ? 'メンテナンスを追加' : 'メンテナンスを編集',
+    values: m,
+    top: '<p class="muted small" style="margin:-8px 0 12px">電池交換・フィルター掃除・ファームウェア更新・ネジの点検など、くり返しやることを周期つきで。</p>',
+    fields: [
+      { k:'title', label:'やること', req:true, ph:'例：電池交換' },
+      { k:'every', label:'周期（日）', type:'number', def:90, list:['7','30','60','90','180','365'], w:'half' },
+      { k:'last', label:'最後にやった日', type:'date', w:'half', hint:'空欄なら完成日から数えます' },
+      { k:'note', label:'メモ', type:'textarea', rows:2, ph:'電池の型番（CR2032 など）、手順' }
+    ],
+    bottom: m && m.history.length ? '<div class="infobox"><b>これまで（' + m.history.length + '回）</b>' + m.history.slice().sort().reverse().slice(0, 12).map(function(d){ return '<span class="mono small" style="margin-right:10px">' + fmtDate(d) + '</span>'; }).join('') + '</div>' : '',
+    onSave: function(v){
+      if(isNew) b.maint.push(Object.assign({ id:uid(), history:[] }, v));
+      else Object.assign(m, v);
+      touch(b); save(); render(true);
+    },
+    onDelete: isNew ? null : function(){ b.maint = b.maint.filter(function(x){ return x !== m; }); touch(b); save(); render(true); }
+  });
+}
+
+function logForm(b, l){
+  formSheet({
+    title:'記録を編集', values:l,
+    fields:[{ k:'date', label:'日付', type:'date', w:'half' }, { k:'text', label:'内容', type:'textarea', rows:5 }],
+    bottom: l.photos.length ? '<div class="infobox"><b>写真（タップで外す）</b><div class="photos">' + l.photos.map(function(k){ return '<img data-img="' + esc(k + '_t') + '" data-act="logPhotoDel" data-b="' + b.id + '" data-l="' + l.id + '" data-k="' + esc(k) + '" alt="">'; }).join('') + '</div></div>' : '',
+    mount:function(root){ hydrate(root); },
+    onSave:function(v){ Object.assign(l, v); touch(b); save(); render(true); },
+    onDelete:function(){ l.photos.forEach(dropPhoto); b.logs = b.logs.filter(function(x){ return x !== l; }); touch(b); save(); render(true); }
+  });
+}
+
+/* 研究デスクの台帳から部品表へ */
+function labPicker(b){
+  UI.pickFor = b;
+  var have = {};
+  b.bom.forEach(function(x){ if(x.invId) have[x.invId] = 1; });
+  function list(q){
+    var ws = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    var items = labInv().filter(function(i){
+      var hay = [i.name, i.model, i.category, i.location].concat(i.tags || []).join(' ').toLowerCase();
+      return ws.every(function(w){ return hay.indexOf(w) >= 0; });
+    }).sort(function(a, c){ return a.name.localeCompare(c.name, 'ja'); });
+    if(!items.length) return '<div class="empty small">' + (labInv().length ? '該当する部品がありません' : '台帳が空です') + '</div>';
+    return '<div class="rows">' + items.map(function(i){
+      return '<button type="button" class="row" data-act="labPick" data-id="' + esc(i.id) + '"><div class="main"><div class="t">' + esc(i.name) + (i.model ? '<small>' + esc(i.model) + '</small>' : '') + (have[i.id] ? ' <span class="pill plain ok">追加済み</span>' : '') + '</div>' +
+        '<div class="s">' + esc(i.category) + ' ・ ' + (labIsTool(i) ? '空き ' : '未使用 ') + num(labUnused(i)) + esc(i.unit || '個') + (i.location ? ' ・ ' + esc(i.location) : '') + '</div></div></button>';
+    }).join('') + '</div>';
+  }
+  openSheet('<h2>研究デスクの台帳から追加</h2>' +
+    '<p class="muted small" style="margin:-8px 0 10px">' + esc(labSrcLabel()) + '</p>' +
+    '<div class="search">' + I.search + '<input type="search" id="pickQ" placeholder="名前・型番・場所で絞り込み"></div>' +
+    '<div class="pick" id="pickList">' + list('') + '</div>' +
+    '<div class="formbtns"><span class="sp"></span><button type="button" class="btn" data-act="closeSheet">閉じる</button></div>',
+    function(root){ $('#pickQ', root).addEventListener('input', function(e){ $('#pickList', root).innerHTML = list(e.target.value); }); });
+}
+/* 部品表の、台帳につながっていない行をまとめて照合する */
+function matchSheet(b){
+  var list = b.bom.filter(function(x){ return !x.invId && !x.noLab; });
+  UI.matchFor = { b:b, list:list };
+  var opts = labOptions();
+  openSheet('<h2>研究デスクの台帳と照合</h2>' +
+    '<p class="muted small" style="margin:-8px 0 12px">名前と型番から、台帳の同じ部品を選んであります。違うものだけ直して「反映」を押してください。つなぐと在庫と保管場所が見え、研究デスク側でもこの作品での使用がわかります。</p>' +
+    '<div class="linkrows">' + list.map(function(x, i){
+      var m = matchLab(x.name, x.model);
+      return '<div class="lrow"><div class="t">' + esc(x.name) + (x.model ? ' <span class="mono small muted">' + esc(x.model) + '</span>' : '') + '</div>' +
+        '<select data-mt="' + i + '">' + opts.map(function(o){
+          if(o.group) return '<optgroup label="' + esc(o.group) + '">' + o.items.map(function(y){ return '<option value="' + esc(y[0]) + '"' + (y[0] === m ? ' selected' : '') + '>' + esc(y[1]) + '</option>'; }).join('') + '</optgroup>';
+          return '<option value=""' + (!m ? ' selected' : '') + '>つながない（今はしない）</option><option value="-">台帳にはない（今後この一覧に出さない）</option>';
+        }).join('') + '</select></div>';
+    }).join('') + '</div>' +
+    '<label class="toggle" style="margin-top:12px"><input type="checkbox" id="mtStock" checked>「要購入」のうち、台帳の在庫で足りるものは「手元にある」にする</label>' +
+    '<div class="formbtns"><span class="sp"></span><button type="button" class="btn" data-act="closeSheet">キャンセル</button><button type="button" class="btn pri" data-act="matchApply">反映</button></div>');
+}
+
+/* 研究デスクの台帳の 1 品目：どこで使っているか */
+function labItemSheet(it){
+  var u = esc(it.unit || '個');
+  var mk = makerUsesOf(it.id), lb = labUsesOf(it.id);
+  openSheet('<h2>' + esc(it.name) + (it.model ? ' <span class="mono small muted">' + esc(it.model) + '</span>' : '') + '</h2>' +
+    '<div class="stats" style="grid-template-columns:repeat(3,1fr)">' +
+      stat(labIsTool(it) ? '空き' : '未使用', num(labUnused(it)), u) + stat('総数', num(it.qty), u) + stat('単価', it.price ? yen(it.price) : '—') + '</div>' +
+    '<div class="infobox"><b>台帳の情報</b>' + [['分類', it.category], ['保管場所', it.location], ['購入先', it.shop], ['最終購入日', it.purchased ? fmtDate(it.purchased) : ''], ['メモ', it.note]].filter(function(r){ return r[1]; }).map(function(r){ return '<div class="ln"><span class="muted">' + r[0] + '：</span>' + esc(r[1]) + '</div>'; }).join('') +
+      (it.url && /^https?:\/\//.test(it.url) ? '<div class="ln"><a href="' + esc(it.url) + '" target="_blank" rel="noopener">商品ページ・データシート ↗</a></div>' : '') + '</div>' +
+    '<div class="infobox"><b>自作デスクで使っている作品（' + mk.length + '）</b>' + (mk.length ? mk.map(function(y){
+      return '<div class="ln"><a href="#/b/' + y.b.id + '/parts" data-act="closeSheet">' + esc(y.b.title) + '</a> <span class="muted mono small">×' + esc(y.x.qty || 1) + ' ・ ' + esc(y.x.state) + '</span></div>';
+    }).join('') : '<div class="small muted">まだありません</div>') + '</div>' +
+    '<div class="infobox"><b>研究デスクで使っている研究（' + lb.length + '）</b>' + (lb.length ? lb.map(function(y){
+      var n = lUseN(y.u);
+      return '<div class="ln">' + esc(y.p.title) + ' <span class="muted mono small">×' + esc(y.u.qty || 1) + ' ・ ' + (n ? (labIsTool(it) ? (y.p.status === '完了' ? '使用終了' : '使用中 ' + n) : '使用済み ' + n) : '使う予定') + '</span></div>';
+    }).join('') : '<div class="small muted">まだありません</div>') + '</div>' +
+    '<div class="formbtns"><a class="btn" href="' + esc(labLink(it.id)) + '" target="_blank" rel="noopener">' + I.ext + '研究デスクで開く</a><span class="sp"></span>' +
+    (DB.builds.length ? '<button type="button" class="btn pri" data-act="labToBuild" data-id="' + esc(it.id) + '">' + I.plus + '作品の部品表に追加</button>' : '') + '</div>');
+}
+function buildChooser(it){
+  var list = DB.builds.filter(function(b){ return b.status !== '引退'; });
+  openSheet('<h2>「' + esc(it.name) + '」をどの作品に？</h2><div class="card rows">' + list.map(function(b){
+    var has = b.bom.some(function(x){ return x.invId === it.id; });
+    return '<button class="row" data-act="labToBuildGo" data-id="' + esc(it.id) + '" data-b="' + b.id + '"><div class="main"><div class="t">' + esc(b.title) + '</div><div class="s">' + esc(b.kind) + ' ・ ' + esc(b.status) + (has ? ' ・ もう部品表にあります' : '') + '</div></div></button>';
+  }).join('') + '</div><div class="formbtns"><span class="sp"></span><button type="button" class="btn" data-act="closeSheet">閉じる</button></div>');
+}
+function bomFromLab(b, it){
+  var tool = labIsTool(it) && TOOL_CATS.indexOf(it.category) >= 0;
+  var x = { id:uid(), name:it.name, model:it.model || '', cat: BOM_CATS.indexOf(it.category) >= 0 ? it.category : 'その他', role: tool ? 'tool' : 'part', qty:1, unit:it.unit || '個', price: it.price == null ? '' : it.price, shop:it.shop || '', url:it.url || '', invId:it.id, note:'',
+    state: labUnused(it) >= 1 ? '手元にある' : '要購入' };
+  b.bom.push(x); touch(b); save();
+  return x;
+}
+
+/* ============================================================
+   写真（記録に添える）
+   本体は IndexedDB、localStorage には写真のキーだけ。サムネイルは キー + '_t'。
+   ============================================================ */
+var FILES = (function(){
+  var dbp;
+  function open(){
+    if(!dbp) dbp = new Promise(function(res, rej){
+      var r = indexedDB.open('maker-desk-files', 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore('files'); };
+      r.onsuccess = function(){ res(r.result); };
+      r.onerror = function(){ rej(r.error); };
+    });
+    return dbp;
+  }
+  function tx(mode, fn){
+    return open().then(function(db){
+      return new Promise(function(res, rej){
+        var t = db.transaction('files', mode), req = fn(t.objectStore('files'));
+        t.oncomplete = function(){ res(req ? req.result : undefined); };
+        t.onerror = t.onabort = function(){ rej(t.error); };
+      });
+    });
+  }
+  return {
+    put: function(k, v){ return tx('readwrite', function(s){ return s.put(v, k); }); },
+    get: function(k){ return tx('readonly', function(s){ return s.get(k); }); },
+    del: function(k){ return tx('readwrite', function(s){ return s.delete(k); }); },
+    keys: function(){ return tx('readonly', function(s){ return s.getAllKeys(); }); },
+    clear: function(){ return tx('readwrite', function(s){ return s.clear(); }); }
+  };
+})();
+var URLS = {};
+function fileURL(k){
+  if(!k) return Promise.resolve('');
+  if(URLS[k]) return Promise.resolve(URLS[k]);
+  return FILES.get(k).then(function(b){ return b ? (URLS[k] = URL.createObjectURL(b)) : ''; }).catch(function(){ return ''; });
+}
+function forgetURLs(){ Object.keys(URLS).forEach(function(k){ URL.revokeObjectURL(URLS[k]); }); URLS = {}; }
+function hydrate(root){
+  (root || document).querySelectorAll('img[data-img]').forEach(function(im){
+    fileURL(im.dataset.img).then(function(u){ if(u) im.src = u; });
+  });
+}
+function loadImg(blob){
+  return new Promise(function(res, rej){
+    var u = URL.createObjectURL(blob), im = new Image();
+    im.onload = function(){ res(im); };
+    im.onerror = function(){ URL.revokeObjectURL(u); rej(new Error('画像を読み込めませんでした')); };
+    im.src = u;
+  });
+}
+function scaled(im, max, q){
+  var w = im.naturalWidth || 1200, h = im.naturalHeight || 900, sc = Math.min(1, max / Math.max(w, h));
+  var c = document.createElement('canvas'); c.width = Math.round(w * sc); c.height = Math.round(h * sc);
+  var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+  return new Promise(function(res){ c.toBlob(res, 'image/jpeg', q); });
+}
+/* iPhone の写真は 1 枚 3〜5MB あるので、長辺 1800px に縮めて保存する */
+function preparePhoto(file){
+  return loadImg(file).then(function(im){
+    return Promise.all([scaled(im, 1800, .85), scaled(im, 420, .8)]).then(function(r){
+      return { full:r[0], thumb:r[1], url:im.src };
+    });
+  });
+}
+var STORING = 0;
+function storePhotos(pend){
+  STORING++;
+  setTimeout(function(){ STORING = Math.max(0, STORING - 1); }, 15000);
+  return Promise.all(pend.map(function(p){
+    var k = uid();
+    return Promise.all([FILES.put(k, p.full), FILES.put(k + '_t', p.thumb)]).then(function(){ return k; });
+  })).then(function(keys){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){} return keys; });
+}
+function dropPhoto(k){
+  [k, k + '_t'].forEach(function(x){ FILES.del(x).catch(function(){}); if(URLS[x]){ URL.revokeObjectURL(URLS[x]); delete URLS[x]; } });
+}
+function coverOf(b){
+  var ls = b.logs.filter(function(l){ return l.photos.length; }).sort(function(a, c){ return (c.date || '') > (a.date || '') ? 1 : -1; });
+  return ls.length ? ls[0].photos[0] : '';
+}
+function lightbox(k){
+  var lb = $('#lightbox'), img = $('#lbImg');
+  img.removeAttribute('src');
+  fileURL(k).then(function(u){ if(u){ img.src = u; lb.hidden = false; } else toast('写真がこの端末にありません（同期の完了を待ってください）'); });
+}
+
+/* ============================================================
+   端末間の同期（Google ドライブのアプリ専用領域）
+   研究デスクと同じ方式・同じ OAuth クライアント。同じクライアントなので
+   アプリ専用領域も研究デスクと共通になり、研究デスクの lab-desk.json を
+   読んで台帳を取り込める（書き換えはしない）。
+   こちらのファイルは maker-desk.json と、写真の mk-<キー>。
+   研究デスクの画像（f-…）には触らない。
+   ============================================================ */
+var GOOGLE_CLIENT_ID = '1088975026923-gg6ra210l32ql6g7hllg6i11qei8agm9.apps.googleusercontent.com';
+var KIDS = ['bom','steps','sessions','maint','logs'];
+var SHADOW = {};
+
+function eachRecord(db, fn){
+  (db.builds || []).forEach(function(b){
+    fn(b, KIDS);
+    KIDS.forEach(function(k){ (b[k] || []).forEach(function(c){ fn(c, []); }); });
+  });
+}
+function recSig(rec, kids){
+  var o = {};
+  Object.keys(rec).sort().forEach(function(k){ if(k !== '_u' && kids.indexOf(k) < 0) o[k] = rec[k]; });
+  return JSON.stringify(o);
+}
+function rebuildShadow(){
+  SHADOW = {};
+  eachRecord(DB, function(r, kids){ if(r.id){ if(!r._u) r._u = 1; SHADOW[r.id] = recSig(r, kids); } });
+}
+function stampChanges(){
+  var now = Date.now(), seen = {};
+  eachRecord(DB, function(r, kids){
+    if(!r.id) return;
+    seen[r.id] = 1;
+    var sg = recSig(r, kids);
+    if(SHADOW[r.id] !== sg){ r._u = now; SHADOW[r.id] = sg; }
+  });
+  Object.keys(SHADOW).forEach(function(id){
+    if(!seen[id]){ DB.deleted[id] = now; delete SHADOW[id]; }
+  });
+}
+function mergeList(a, b, del, kids){
+  var out = [], byB = {}, used = {};
+  (b || []).forEach(function(r){ if(r && r.id) byB[r.id] = r; });
+  function keep(r){ return !(del[r.id] && del[r.id] >= (r._u || 0)); }
+  function one(x, y){
+    var w = (y && (y._u || 0) > (x._u || 0)) ? y : x;
+    var m = Object.assign({}, w);
+    kids.forEach(function(k){ m[k] = mergeList(x[k] || [], (y && y[k]) || [], del, []); });
+    return m;
+  }
+  (a || []).forEach(function(r){
+    if(!r || !r.id) return;
+    var o = byB[r.id]; used[r.id] = 1;
+    var m = one(r, o || null);
+    if(keep(m)) out.push(m);
+  });
+  (b || []).forEach(function(r){
+    if(!r || !r.id || used[r.id]) return;
+    var m = one(r, null);
+    if(keep(m)) out.push(m);
+  });
+  return out;
+}
+function mergeDB(a, b){
+  var del = {};
+  [a.deleted || {}, b.deleted || {}].forEach(function(d){ Object.keys(d).forEach(function(id){ del[id] = Math.max(del[id] || 0, d[id]); }); });
+  return { builds: mergeList(a.builds, b.builds, del, KIDS), deleted: del };
+}
+function syncPayload(db){
+  var del = {};
+  Object.keys(db.deleted || {}).sort().forEach(function(k){ del[k] = db.deleted[k]; });
+  return JSON.stringify({ v:1, app:'maker-desk', builds:db.builds || [], deleted:del });
+}
+
+var SM_KEY = 'maker-desk-sync';
+var SM = (function(){ try{ return JSON.parse(localStorage.getItem(SM_KEY)) || {}; }catch(e){ return {}; } })();
+function saveSM(){ try{ localStorage.setItem(SM_KEY, JSON.stringify(SM)); }catch(e){} }
+function clientId(){ return GOOGLE_CLIENT_ID || SM.clientId || ''; }
+function tokenOK(){ return !!(SM.token && SM.exp && Date.now() < SM.exp); }
+function redirectURI(){ return location.origin + location.pathname.replace(/index\.html$/, ''); }
+function login(silent){
+  if(!clientId()){ location.hash = '#/settings'; return; }
+  var st = uid() + uid();
+  try{ sessionStorage.setItem('maker-desk-oauth', JSON.stringify({ st:st, back: location.hash || '#/', silent: !!silent })); }catch(e){}
+  var q = {
+    client_id: clientId(), redirect_uri: redirectURI(), response_type: 'token',
+    scope: 'https://www.googleapis.com/auth/drive.appdata', include_granted_scopes: 'true', state: st
+  };
+  if(SM.email) q.login_hint = SM.email;
+  if(silent) q.prompt = 'none';
+  location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams(q).toString();
+}
+var SYNC = { running:false, again:false, timer:0, state:'off', detail:'' };
+function takeOAuthReturn(){
+  var h = location.hash;
+  if(h.indexOf('access_token=') < 0 && h.indexOf('error=') < 0) return;
+  var q = new URLSearchParams(h.replace(/^#\/?/, ''));
+  var saved = {};
+  try{ saved = JSON.parse(sessionStorage.getItem('maker-desk-oauth')) || {}; sessionStorage.removeItem('maker-desk-oauth'); }catch(e){}
+  if(q.get('state') && q.get('state') === saved.st){
+    if(q.get('access_token')){
+      SM.token = q.get('access_token'); SM.exp = Date.now() + (Math.max(60, +q.get('expires_in') || 3600) - 120) * 1000;
+      SM.signedIn = true; SM.needLogin = false; saveSM();
+      SYNC.justLoggedIn = true;
+    }else if(q.get('error')){
+      SM.needLogin = true; saveSM();
+      if(!saved.silent) SYNC.flash = 'ログインできませんでした（' + q.get('error') + '）';
+    }
+  }
+  history.replaceState(null, '', location.pathname + location.search + (saved.back && saved.back.indexOf('access_token') < 0 ? saved.back : '#/'));
+}
+function logout(){
+  if(SM.token) fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(SM.token), { method:'POST', mode:'no-cors' }).catch(function(){});
+  var cid = SM.clientId;
+  SM = { clientId: cid }; saveSM();
+  setSyncState('off');
+}
+
+var DRIVE = 'https://www.googleapis.com/drive/v3/files', UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
+function gfetch(url, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({ Authorization: 'Bearer ' + SM.token }, opts.headers || {});
+  return fetch(url, opts).then(function(r){
+    if(!r.ok){ var e = new Error('Google ドライブ ' + r.status); e.status = r.status; throw e; }
+    return r;
+  });
+}
+function driveList(){
+  var all = [];
+  function page(tok){
+    var u = DRIVE + '?spaces=appDataFolder&pageSize=1000&fields=' + encodeURIComponent('nextPageToken,files(id,name,createdTime,modifiedTime)') + (tok ? '&pageToken=' + encodeURIComponent(tok) : '');
+    return gfetch(u).then(function(r){ return r.json(); }).then(function(j){
+      all = all.concat(j.files || []);
+      return j.nextPageToken ? page(j.nextPageToken) : all;
+    });
+  }
+  return page('');
+}
+function driveGet(id){ return gfetch(DRIVE + '/' + id + '?alt=media'); }
+function driveCreate(name, body, type){
+  var b = 'makerdesk' + uid();
+  var meta = JSON.stringify({ name:name, parents:['appDataFolder'] });
+  var blob = new Blob(['--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n--' + b + '\r\nContent-Type: ' + (type || 'application/octet-stream') + '\r\n\r\n', body, '\r\n--' + b + '--']);
+  return gfetch(UPLOAD + '?uploadType=multipart&fields=id', { method:'POST', headers:{ 'Content-Type':'multipart/related; boundary=' + b }, body:blob }).then(function(r){ return r.json(); });
+}
+function driveUpdate(id, body, type){
+  return gfetch(UPLOAD + '/' + id + '?uploadType=media', { method:'PATCH', headers:{ 'Content-Type': type || 'application/json' }, body:body });
+}
+function driveDelete(id){ return gfetch(DRIVE + '/' + id, { method:'DELETE' }).catch(function(e){ if(e.status !== 404) throw e; }); }
+function driveAbout(){
+  return gfetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress,displayName)').then(function(r){ return r.json(); });
+}
+
+function uiBusy(){ return !$('#sheet').hidden; }
+function setSyncState(st, detail){
+  SYNC.state = st; SYNC.detail = detail || '';
+  var b = $('#syncBtn');
+  if(b){ b.className = 'iconbtn sync ' + st; b.title = syncLabel(); }
+  var el = $('#syncStatus'); if(el) el.textContent = syncLabel();
+}
+function syncLabel(){
+  return {
+    off:'同期していません', ok:'同期済み' + (SM.last ? '（' + agoLabel(SM.last) + '）' : ''), syncing:'同期中…' + (SYNC.detail ? ' ' + SYNC.detail : ''),
+    login:'再ログインが必要です（タップしてログイン）', error:'同期できませんでした：' + SYNC.detail, offline:'オフライン（つながったら同期します）'
+  }[SYNC.state] || '';
+}
+function agoLabel(t){
+  var m = Math.round((Date.now() - t) / 60000);
+  if(m < 1) return 'たった今'; if(m < 60) return m + '分前';
+  var h = Math.round(m / 60); if(h < 24) return h + '時間前';
+  return fmtDate(isoOf(t));
+}
+function syncSoon(ms){
+  if(!SM.signedIn || SYNC.applying) return;
+  clearTimeout(SYNC.timer);
+  SYNC.timer = setTimeout(function(){ syncNow(false); }, ms == null ? 3000 : ms);
+}
+/* 研究デスクの同期ファイルを読む（読むだけ。失敗しても同期は続ける） */
+function pullLab(files){
+  var lf = files.filter(function(x){ return x.name === 'lab-desk.json'; })
+    .sort(function(a, b){ return (b.modifiedTime || '') > (a.modifiedTime || '') ? 1 : -1; })[0];
+  if(!lf) return Promise.resolve(false);
+  return driveGet(lf.id).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || !Array.isArray(d.inventory)) return false;
+    var before = LAB.at;
+    setLabCache(d, 'drive');
+    return LAB.at !== before;
+  }).catch(function(){ return false; });
+}
+function syncNow(interactive){
+  if(!clientId() || !SM.signedIn){ if(interactive) login(false); return Promise.resolve(); }
+  if(!tokenOK()){
+    if(interactive) login(false);
+    else setSyncState('login');
+    return Promise.resolve();
+  }
+  if(!navigator.onLine){ setSyncState('offline'); return Promise.resolve(); }
+  if(SYNC.running){ SYNC.again = true; return Promise.resolve(); }
+  if(uiBusy()){ syncSoon(4000); return Promise.resolve(); }
+  SYNC.running = true; setSyncState('syncing');
+  var changedView = false;
+  return driveList().then(function(files){
+    var jsons = files.filter(function(x){ return x.name === 'maker-desk.json'; });
+    var remote = null, remoteStr = '';
+    return pullLab(files).then(function(labChanged){
+      if(labChanged) changedView = true;
+      return jsons.reduce(function(pr, fl){
+        return pr.then(function(){ return driveGet(fl.id).then(function(r){ return r.json(); }).then(function(d){
+          remote = remote ? mergeDB(remote, d) : d;
+        }); });
+      }, Promise.resolve());
+    }).then(function(){
+      if(remote){
+        remoteStr = syncPayload(remote);
+        if(uiBusy()){ var e = new Error('busy'); e.busy = true; throw e; }
+        stampChanges();
+        var m = mergeDB(DB, remote);
+        if(syncPayload(m) !== syncPayload(DB)){
+          SYNC.applying = true;
+          DB.builds = m.builds; DB.deleted = m.deleted;
+          normalize(DB); rebuildShadow(); save();
+          SYNC.applying = false;
+          changedView = true;
+        }
+      }
+      return syncFiles(files).then(function(dl){ if(dl) changedView = true; });
+    }).then(function(){
+      var mine = syncPayload(DB);
+      var w;
+      if(!jsons.length) w = driveCreate('maker-desk.json', mine, 'application/json');
+      else if(mine !== remoteStr || jsons.length > 1) w = driveUpdate(jsons[0].id, mine, 'application/json');
+      return Promise.resolve(w).then(function(){
+        return Promise.all(jsons.slice(1).map(function(x){ return driveDelete(x.id); }));
+      });
+    });
+  }).then(function(){
+    SM.last = Date.now(); saveSM();
+    setSyncState('ok');
+    if(changedView && !uiBusy()) render(true);
+  }).catch(function(e){
+    SYNC.applying = false;
+    if(e.busy){ syncSoon(4000); setSyncState('ok'); }
+    else if(e.status === 401 || e.status === 403){ SM.token = ''; SM.exp = 0; saveSM(); setSyncState('login'); }
+    else if(!navigator.onLine) setSyncState('offline');
+    else setSyncState('error', e.message || '通信エラー');
+  }).then(function(){
+    SYNC.running = false;
+    if(SYNC.again){ SYNC.again = false; syncSoon(500); }
+  });
+}
+/* 写真：無いほうへ送る。どの記録からも使われなくなったものは片づける（mk- のものだけ） */
+function syncFiles(files){
+  var remote = {};
+  files.forEach(function(x){ if(x.name.indexOf('mk-') === 0) remote[x.name.slice(3)] = x; });
+  var need = {};
+  DB.builds.forEach(function(b){ b.logs.forEach(function(l){ l.photos.forEach(function(k){ need[k] = 1; need[k + '_t'] = 1; }); }); });
+  var downloaded = 0;
+  return FILES.keys().then(function(localKeys){
+    var local = {}; localKeys.forEach(function(k){ local[k] = 1; });
+    var up = Object.keys(need).filter(function(k){ return local[k] && !remote[k]; });
+    var down = Object.keys(need).filter(function(k){ return !local[k] && remote[k]; });
+    var total = up.length + down.length, done = 0;
+    function tick(){ done++; setSyncState('syncing', '写真 ' + done + '/' + total); }
+    var chain = Promise.resolve();
+    up.forEach(function(k){ chain = chain.then(function(){ return FILES.get(k).then(function(b){ return b ? driveCreate('mk-' + k, b, b.type) : null; }).then(tick); }); });
+    down.forEach(function(k){ chain = chain.then(function(){ return driveGet(remote[k].id).then(function(r){ return r.blob(); }).then(function(b){ downloaded++; return FILES.put(k, b); }).then(tick); }); });
+    return chain.then(function(){
+      var dayAgo = Date.now() - 864e5;
+      var gcRemote = Object.keys(remote).filter(function(k){ return !need[k] && new Date(remote[k].createdTime).getTime() < dayAgo; });
+      var gcLocal = STORING ? [] : localKeys.filter(function(k){ return !need[k]; });
+      gcLocal.forEach(function(k){ FILES.del(k).catch(function(){}); if(URLS[k]){ URL.revokeObjectURL(URLS[k]); delete URLS[k]; } });
+      return Promise.all(gcRemote.map(function(k){ return driveDelete(remote[k].id); }));
+    }).then(function(){ return downloaded; });
+  });
+}
+function syncStartup(){
+  if(!SM.signedIn || !clientId()) return;
+  if(SYNC.justLoggedIn){
+    SYNC.justLoggedIn = false;
+    driveAbout().then(function(a){ if(a.user){ SM.email = a.user.emailAddress; SM.name = a.user.displayName; saveSM(); render(true); } }).catch(function(){});
+    toast('ログインしました。同期します');
+    syncNow(false);
+    return;
+  }
+  if(tokenOK()){ syncNow(false); return; }
+  var last = +(localStorage.getItem('maker-desk-silent') || 0);
+  if(navigator.onLine && !SM.needLogin && Date.now() - last > 10 * 60000){
+    try{ localStorage.setItem('maker-desk-silent', String(Date.now())); }catch(e){}
+    login(true);
+  }else setSyncState('login');
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    var before = LAB.at; loadLab();
+    if(LAB.at !== before && !uiBusy()) render(true);
+  }
+  if(!SM.signedIn) return;
+  if(document.visibilityState === 'visible') syncSoon(300);
+  else if(tokenOK() && !SYNC.running) syncNow(false);
+});
+window.addEventListener('online', function(){ syncSoon(500); });
+/* 同じブラウザの別タブで研究デスクを編集したら、すぐ反映する */
+window.addEventListener('storage', function(e){
+  if(e.key === LAB_KEY){ loadLab(); if(!uiBusy()) render(true); }
+});
+
+function syncSettingsHTML(){
+  var h = '<div class="sec"><h2>端末間の同期</h2></div><div class="card">';
+  if(!SM.signedIn){
+    return h + '<div class="setrow"><div class="main">Google アカウントで同期<div class="s">パソコン・iPad・iPhone で同じデータを使えるようにします。保存先は自分の Google ドライブのアプリ専用領域（ドライブの画面には出ない場所）です。研究デスクで同期しているアカウントでログインすると、研究デスクの台帳もここに届きます。</div></div><button class="btn sm pri" data-act="syncLogin">Google でログイン</button></div></div>';
+  }
+  return h + '<div class="setrow"><div class="main">' + esc(SM.email || 'Google アカウント') + '<div class="s" id="syncStatus">' + esc(syncLabel()) + '</div></div><button class="btn sm" data-act="syncNow">今すぐ同期</button></div>' +
+    '<div class="setrow"><div class="main"><div class="s">変更は数秒後に自動で送られ、アプリを開いたときに他の端末の変更と研究デスクの台帳を取り込みます。ログインの有効期限は約1時間で、切れたら自動で取り直します。</div></div></div>' +
+    '<div class="setrow"><div class="main">ログアウト<div class="s">この端末の同期をやめます。データはこの端末にもクラウドにも残ります</div></div><button class="btn sm" data-act="syncLogout">ログアウト</button></div></div>';
+}
+
+/* ============================================================
+   カレンダー（.ics）— FirstSeed カレンダーなどに「追加」で取り込む
+   ============================================================ */
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function icsEsc(s){ return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+var ENC = window.TextEncoder ? new TextEncoder() : null;
+function fold(line){
+  var out = [], cur = '', len = 0, max = 73;
+  Array.from(line).forEach(function(ch){
+    var n = ENC ? ENC.encode(ch).length : 3;
+    if(len + n > max){ out.push(cur); cur = ''; len = 0; max = 72; }
+    cur += ch; len += n;
+  });
+  out.push(cur);
+  return out.join('\r\n ');
+}
+function stampUTC(d){ return d.getUTCFullYear() + pad2(d.getUTCMonth() + 1) + pad2(d.getUTCDate()) + 'T' + pad2(d.getUTCHours()) + pad2(d.getUTCMinutes()) + pad2(d.getUTCSeconds()) + 'Z'; }
+/* カレンダーに送れるもの：これからの作業日と、120 日以内のメンテナンス */
+function calItems(){
+  var out = [], lim = addDays(120), today = todayISO();
+  DB.builds.forEach(function(b){
+    b.sessions.forEach(function(s){
+      if(s.done || !s.date || s.date < today) return;
+      var sig = [s.date, s.start, s.end, s.title, s.note].join('|');
+      out.push({ kind:'session', b:b, x:s, date:s.date, start:s.start, end:s.end, title:s.title || ('作業：' + b.title), desc:(s.note ? s.note + '\n\n' : '') + '自作デスク：' + b.title, sig:sig, sent: s.sentSig === sig, uid:'maker-s-' + s.id });
+    });
+    if(b.status !== '稼働中') return;
+    b.maint.forEach(function(m){
+      var due = maintDue(b, m);
+      if(!due || due > lim) return;
+      var d = due < today ? today : due;
+      var sig = [d, m.title].join('|');
+      out.push({ kind:'maint', b:b, x:m, date:d, title:'メンテ：' + m.title + '（' + b.title + '）', desc:(m.note ? m.note + '\n\n' : '') + m.every + '日ごと ・ 自作デスク：' + b.title, sig:sig, sent: m.sentSig === sig, uid:'maker-m-' + m.id + '-' + d.replace(/-/g, '') });
+    });
+  });
+  return out.sort(function(a, b){ return (a.date + (a.start || '')) < (b.date + (b.start || '')) ? -1 : 1; });
+}
+function buildICS(list){
+  var now = stampUTC(new Date());
+  var L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//KURU77//maker-desk//JA','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:自作デスク','X-WR-TIMEZONE:Asia/Tokyo',
+    'BEGIN:VTIMEZONE','TZID:Asia/Tokyo','BEGIN:STANDARD','DTSTART:19700101T000000','TZOFFSETFROM:+0900','TZOFFSETTO:+0900','TZNAME:JST','END:STANDARD','END:VTIMEZONE'];
+  list.forEach(function(e){
+    L.push('BEGIN:VEVENT', 'UID:' + e.uid + '@kuru77.github.io', 'DTSTAMP:' + now);
+    if(e.start){
+      var endDate = e.end && e.end > e.start ? e.date : addDaysTo(e.date, e.end ? 1 : 0);
+      var end = e.end || e.start;
+      L.push('DTSTART;TZID=Asia/Tokyo:' + e.date.replace(/-/g, '') + 'T' + e.start.replace(':', '') + '00');
+      L.push('DTEND;TZID=Asia/Tokyo:' + endDate.replace(/-/g, '') + 'T' + end.replace(':', '') + '00');
+    }else{
+      L.push('DTSTART;VALUE=DATE:' + e.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + addDaysTo(e.date, 1).replace(/-/g, ''));
+    }
+    L.push('SUMMARY:' + icsEsc(e.title), 'DESCRIPTION:' + icsEsc(e.desc), 'CATEGORIES:' + icsEsc(e.kind === 'maint' ? 'メンテナンス' : '自作'), 'TRANSP:' + (e.start ? 'OPAQUE' : 'TRANSPARENT'), 'END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n') + '\r\n';
+}
+function calSheet(){
+  var items = calItems();
+  UI.calItems = items;
+  if(!items.length){
+    openSheet('<h2>カレンダーに追加</h2><div class="empty">送れる予定がありません。<br>作品の「段取り」で作業日を決めるか、「メンテ」で周期を登録してください。</div><div class="formbtns"><span class="sp"></span><button class="btn" data-act="closeSheet">閉じる</button></div>');
+    return;
+  }
+  var unsent = items.filter(function(x){ return !x.sent; }).length;
+  openSheet('<h2>カレンダーに追加（.ics）</h2>' +
+    '<p class="muted small" style="margin:-8px 0 12px">選んだ予定を .ics にして共有します。FirstSeed カレンダーなどは「追加」で取り込むので、もとの予定は消えません。<b>送ったものは次から外してある</b>ので、同じ予定が二重に入るのを防げます。</p>' +
+    '<div class="linkrows">' + items.map(function(x, i){
+      return '<div class="lrow"><label><input type="checkbox" data-cal="' + i + '"' + (x.sent ? '' : ' checked') + '><span><span class="t">' + esc(x.title) + '</span><br><span class="s mono">' + fmtDate(x.date) + '（' + wday(x.date) + '）' + (x.start ? ' ' + esc(x.start) + '〜' + esc(x.end || '') : ' 終日') + '</span>' + (x.sent ? ' <span class="sentmark">送信済み</span>' : '') + '</span></label></div>';
+    }).join('') + '</div>' +
+    '<p class="muted small">未送信 ' + unsent + ' 件 / 全 ' + items.length + ' 件</p>' +
+    '<div class="formbtns"><button type="button" class="btn" data-act="calDownload">.ics を保存</button><span class="sp"></span><button type="button" class="btn" data-act="closeSheet">閉じる</button><button type="button" class="btn pri" data-act="calShare">共有して追加</button></div>');
+}
+function calSelected(){
+  var out = [];
+  document.querySelectorAll('#sheetBody input[data-cal]').forEach(function(c){ if(c.checked) out.push(UI.calItems[+c.dataset.cal]); });
+  return out;
+}
+function markCalSent(list){
+  list.forEach(function(e){ e.x.sentSig = e.sig; touch(e.b); });
+  save(); render(true);
+}
+function calFileName(){ var d = new Date(); return 'maker-desk-' + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + '.ics'; }
+function downloadICS(text, name, list){
+  download(name, text, 'text/calendar');
+  markCalSent(list); closeSheet();
+  toast('.ics を保存しました（' + list.length + '件）');
+}
+
+/* ============================================================
+   画面
+   ============================================================ */
+function topbar(html){ $('#topbar').innerHTML = html; }
+function brandBar(){
+  topbar('<div class="brand"><i></i>自作デスク</div><span class="sp"></span>' +
+    '<span class="mono small faint">' + fmtDate(todayISO()) + '</span>' +
+    (SM.signedIn ? '<button class="iconbtn sync ' + SYNC.state + '" id="syncBtn" data-act="syncNow" title="' + esc(syncLabel()) + '" aria-label="同期">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.1 4.75 4.75 0 0 0 7 18.5z"/><path class="ok" d="M9.5 13.5l2 2 3.5-3.5"/><path class="bang" d="M12 10.5v3M12 16v.01"/></svg></button>' : ''));
+}
+function stat(k, v, unit, href){
+  return '<' + (href ? 'a href="' + href + '"' : 'div') + ' class="card stat"><div class="k">' + k + '</div><div class="v">' + esc(v) + (unit ? '<small>' + unit + '</small>' : '') + '</div></' + (href ? 'a' : 'div') + '>';
+}
+/* 予定：作業日とメンテナンスを 1 つの並びにする */
+function agenda(){
+  var out = [];
+  DB.builds.forEach(function(b){
+    b.sessions.forEach(function(s){ if(!s.done) out.push({ type:'s', b:b, x:s, date:s.date || '' }); });
+    if(b.status === '引退' || b.status === '保留') return;
+    b.maint.forEach(function(m){ var d = maintDue(b, m); if(d) out.push({ type:'m', b:b, x:m, date:d }); });
+  });
+  return out.sort(function(a, c){ return ((a.date || '9999') + (a.x.start || '')) < ((c.date || '9999') + (c.x.start || '')) ? -1 : 1; });
+}
+function agendaRow(a, showB){
+  var dl = dueLabel(a.date);
+  showB = showB !== false;
+  if(a.type === 's'){
+    return '<div class="row sess">' +
+      '<button class="chk" data-act="sessDone" data-b="' + a.b.id + '" data-id="' + a.x.id + '" aria-label="終わった">' + I.check + '</button>' +
+      '<button class="main" style="text-align:left" data-act="sessEdit" data-b="' + a.b.id + '" data-id="' + a.x.id + '"><div class="t">' + esc(a.x.title || '作業') + '</div>' +
+      '<div class="s">' + (showB ? esc(a.b.title) + ' ・ ' : '') + (a.x.start ? esc(a.x.start) + '〜' + esc(a.x.end || '') : '終日') + (a.x.note ? ' ・ ' + esc(short(lines(a.x.note).map(function(l){ return l.replace(/^[・•*\-]\s*/, ''); }).join('、'), 30)) : '') + '</div></button>' +
+      '<span class="due ' + dl.c + '">' + esc(dl.t) + (a.x.sentSig ? '<small>カレンダー済</small>' : '') + '</span></div>';
+  }
+  return '<div class="row">' +
+    '<button class="usebtn stbtn s-取り付け済み" style="min-width:58px" data-act="maintDone" data-b="' + a.b.id + '" data-id="' + a.x.id + '">やった</button>' +
+    '<button class="main" style="text-align:left" data-act="maintEdit" data-b="' + a.b.id + '" data-id="' + a.x.id + '"><div class="t">' + esc(a.x.title) + '</div>' +
+    '<div class="s">' + (showB ? esc(a.b.title) + ' ・ ' : '') + 'メンテ ・ ' + esc(a.x.every) + '日ごと' + (a.x.last ? ' ・ 前回 ' + fmtShort(a.x.last) : '') + '</div></button>' +
+    '<span class="due ' + dl.c + '">' + esc(dl.t) + '</span></div>';
+}
+
+function viewHome(){
+  brandBar();
+  var bs = DB.builds;
+  if(!bs.length){
+    return '<div class="card empty" style="margin-top:8px"><div class="big">まだ自作が登録されていません</div>' +
+      '<div>電子工作・スマートホーム・DIY・自作PC・修理など、<br>作りたいもの・作ったものを登録して、部品と段取りと記録をまとめておけます。</div>' +
+      '<div class="btnrow"><button class="btn pri" data-act="buildNew">' + I.plus + '自作を追加</button><button class="btn" data-act="loadSample">サンプルで試す</button></div></div>' + labHint();
+  }
+  var making = bs.filter(function(b){ return ACTIVE.indexOf(b.status) >= 0; }).length;
+  var running = bs.filter(function(b){ return b.status === '稼働中'; }).length;
+  var buy = shopItems().filter(function(y){ return y.x.state === '要購入'; }).length;
+  var ag = agenda().filter(function(a){ return a.date && daysUntil(a.date) <= 14; });
+  var h = '<div class="stats">' + stat('段取り・製作中', making, '件') + stat('稼働中', running, '台') +
+    stat('2週間以内の予定', ag.length, '件', '#/plan') + stat('買うもの', buy, '点', '#/shop') + '</div>';
+  if(ag.length){
+    h += '<div class="sec"><h2>近い予定</h2><span class="sp"></span><a class="lnk" href="#/plan">すべて見る</a></div>' +
+      '<div class="card rows">' + ag.slice(0, 6).map(function(a){ return agendaRow(a); }).join('') + '</div>';
+  }
+  var counts = { 'すべて': bs.length };
+  STATUSES.forEach(function(s){ counts[s] = bs.filter(function(b){ return b.status === s; }).length; });
+  var kc = {}; bs.forEach(function(b){ kc[b.kind] = (kc[b.kind] || 0) + 1; });
+  h += '<div class="sec"><h2>自作</h2></div><div class="chips">' + ['すべて'].concat(STATUSES).filter(function(s){ return s === 'すべて' || counts[s]; }).map(function(s){
+    return '<button class="chip' + (UI.filter === s ? ' on' : '') + '" data-act="filter" data-v="' + s + '">' + s + ' <b>' + counts[s] + '</b></button>';
+  }).join('') + '</div>';
+  if(Object.keys(kc).length > 1) h += '<div class="chips">' + ['すべて'].concat(KINDS.filter(function(k){ return kc[k]; })).map(function(k){
+    return '<button class="chip' + (UI.kind === k ? ' on' : '') + '" data-act="kindFilter" data-v="' + k + '">' + (k === 'すべて' ? '種類：すべて' : k) + (k === 'すべて' ? '' : ' <b>' + kc[k] + '</b>') + '</button>';
+  }).join('') + '</div>';
+  var order = {}; ['製作中','段取り中','稼働中','アイデア','保留','引退'].forEach(function(s, i){ order[s] = i; });
+  var list = bs.filter(function(b){ return (UI.filter === 'すべて' || b.status === UI.filter) && (UI.kind === 'すべて' || b.kind === UI.kind); })
+    .slice().sort(function(a, b){ return (order[a.status] - order[b.status]) || ((b.updatedAt || '') > (a.updatedAt || '') ? 1 : -1); });
+  h += list.length ? '<div class="plist" style="margin-top:8px">' + list.map(buildCard).join('') + '</div>'
+    : '<div class="card empty" style="margin-top:8px">条件に合う自作はありません</div>';
+  h += '<button class="fab" data-act="buildNew">' + I.plus + '自作を追加</button>';
+  return h;
+}
+function labHint(){
+  if(LAB.db) return '';
+  return '<div class="card banner info" style="margin-top:12px"><div class="main"><b>研究デスクの部品・工具とつなげられます</b><div class="s">同じブラウザで研究デスクを使っていれば自動で読み込みます。iPhone のホーム画面から使う場合は、両方で同じ Google アカウントの同期をオンにしてください。</div></div><a class="btn sm" href="#/settings">設定</a></div>';
+}
+function buildCard(b){
+  var pr = stepProg(b), rd = readiness(b), cov = coverOf(b);
+  var nx = upcomingSessions(b)[0], dl = nx && nx.date ? dueLabel(nx.date) : null;
+  var md = b.status === '稼働中' ? b.maint.map(function(m){ return { m:m, d:maintDue(b, m) }; }).filter(function(y){ return y.d; }).sort(function(a, c){ return a.d < c.d ? -1 : 1; })[0] : null;
+  var mdl = md ? dueLabel(md.d) : null;
+  return '<a class="card proj" href="#/b/' + b.id + '">' + (cov ? '<img class="cov" data-img="' + esc(cov + '_t') + '" alt="">' : '') + '<div class="bd">' +
+    '<div class="hd"><h3>' + esc(b.title) + '</h3><span class="pill st-' + esc(b.status) + '">' + esc(b.status) + '</span></div>' +
+    '<div style="margin-top:2px"><span class="kind">' + esc(b.kind) + '</span>' + (b.place ? ' <span class="small muted">' + esc(b.place) + '</span>' : '') + '</div>' +
+    (b.summary ? '<div class="sum">' + esc(b.summary) + '</div>' : '<div style="height:8px"></div>') +
+    (pr.n ? '<div class="pr"><div class="bar' + (pr.pct >= 100 ? ' done' : '') + '"><i style="width:' + pr.pct + '%"></i></div><span class="n">手順 ' + pr.d + '/' + pr.n + '</span></div>' : '') +
+    '<div class="meta">' + (rd.n ? '<span>' + I.chip + '揃った ' + rd.d + '/' + rd.n + '</span>' : '') + (bomCost(b) ? '<span>' + I.yen + yen(bomCost(b)) + '</span>' : '') +
+    (nx ? '<span class="next">' + I.cal + esc(short(nx.title || '作業', 14)) + ' <span class="due ' + (dl ? dl.c : '') + '">' + esc(dl ? dl.t : '日付未定') + '</span></span>' : '') +
+    (md ? '<span class="next">' + I.wrench + esc(short(md.m.title, 12)) + ' <span class="due ' + mdl.c + '">' + esc(mdl.t) + '</span></span>' : '') + '</div></div></a>';
+}
+
+var BTABS = [['overview','概要'],['parts','部品・工具'],['prep','段取り'],['log','記録'],['maint','メンテ']];
+function viewBuild(b, tab){
+  topbar('<a class="iconbtn" href="#/" aria-label="戻る">' + I.back + '</a><h1>' + esc(b.title) + '</h1>' +
+    '<button class="iconbtn" data-act="buildEdit" aria-label="編集">' + I.edit + '</button>');
+  var pr = stepProg(b);
+  var cnt = { parts:b.bom.length, prep:b.steps.length + upcomingSessions(b).length, log:b.logs.length, maint:b.maint.length };
+  var h = '<div class="card phead"><div class="st"><span class="pill st-' + esc(b.status) + '">' + esc(b.status) + '</span><span class="kind">' + esc(b.kind) + '</span>' +
+    (b.startDate || b.targetDate ? '<span class="mono small muted">' + (b.startDate ? fmtDate(b.startDate) : '') + ' → ' + (b.targetDate ? fmtDate(b.targetDate) : '未定') + '</span>' : '') +
+    (b.targetDate && ACTIVE.indexOf(b.status) >= 0 ? (function(){ var n = daysUntil(b.targetDate); return '<span class="pill plain ' + (n < 0 ? 'bad' : n <= 14 ? 'warn' : '') + '">' + (n < 0 ? (-n) + '日過ぎ' : 'あと' + n + '日') + '</span>'; })() : '') +
+    '</div><h2>' + esc(b.title) + '</h2>' + (b.place ? '<div class="small muted">' + esc(b.place) + '</div>' : '') +
+    (pr.n ? '<div class="pr"><div class="bar' + (pr.pct >= 100 ? ' done' : '') + '"><i style="width:' + pr.pct + '%"></i></div><span class="n">手順 ' + pr.d + '/' + pr.n + '</span></div>' : '') + '</div>' +
+    '<div class="seg" role="tablist">' + BTABS.map(function(t){
+      return '<a role="tab" href="#/b/' + b.id + '/' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + (cnt[t[0]] ? '<b>' + cnt[t[0]] + '</b>' : '') + '</a>';
+    }).join('') + '</div>';
+  var body = { overview:tabOverview, parts:tabParts, prep:tabPrep, log:tabLog, maint:tabMaint }[tab] || tabOverview;
+  return h + body(b);
+}
+
+function prepSummary(b){
+  var buy = b.bom.filter(function(x){ return x.state === '要購入'; }), ord = b.bom.filter(function(x){ return x.state === '注文済み'; });
+  var tools = b.bom.filter(function(x){ return isToolX(x) && x.state === '手元にある'; });
+  var left = b.steps.filter(function(s){ return !s.done; }), mins = left.reduce(function(s, x){ return s + (+x.mins || 0); }, 0);
+  var cov = buy.filter(coveredByLab);
+  var names = function(l){ return l.slice(0, 5).map(function(x){ return esc(x.name); }).join('、') + (l.length > 5 ? ' ほか' + (l.length - 5) + '点' : ''); };
+  return '<div class="card prep">' +
+    '<div class="ln"><b>買うもの</b><span>' + (buy.length ? '<span style="color:var(--bad)">' + buy.length + '点</span> ' + names(buy) + (toBuyCost(buy) ? ' <span class="mono small muted">（' + yen(toBuyCost(buy)) + '）</span>' : '') : '<span class="okline">なし</span>') + '</span></div>' +
+    (cov.length ? '<div class="ln"><b></b><span class="lab small">うち ' + cov.length + '点は研究デスクの台帳に在庫があります</span></div>' : '') +
+    (ord.length ? '<div class="ln"><b>届くのを待つ</b><span>' + names(ord) + '</span></div>' : '') +
+    (tools.length ? '<div class="ln"><b>使う工具</b><span>' + names(tools) + '</span></div>' : '') +
+    '<div class="ln"><b>残りの手順</b><span>' + (b.steps.length ? (left.length ? left.length + ' / ' + b.steps.length + (mins ? ' ・ 目安 ' + fmtMins(mins) : '') : '<span class="okline">すべて完了</span>') : '<span class="faint">未登録</span>') + '</span></div>' +
+    '</div>';
+}
+function fmtMins(m){ return m >= 60 ? Math.floor(m / 60) + '時間' + (m % 60 ? m % 60 + '分' : '') : m + '分'; }
+
+function tabOverview(b){
+  var dd = function(label, v){ return '<div><dt>' + label + '</dt><dd' + (v ? '' : ' class="none"') + '>' + (v ? esc(v) : '未記入') + '</dd></div>'; };
+  var h = '<div class="sec"><h2>この自作について</h2><span class="sp"></span><button class="btn sm" data-act="buildEdit">' + I.edit + '編集</button></div>' +
+    '<div class="card"><dl class="dl">' + dd('目的・どう便利になるか', b.summary) + dd('使う場所・設置場所', b.place) +
+    (b.doneDate ? dd('完成日', fmtDate(b.doneDate)) : '') +
+    (b.url && /^https?:\/\//.test(b.url) ? '<div><dt>参考ページ</dt><dd><a href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(short(b.url, 48)) + ' ↗</a></dd></div>' : '') +
+    '<div><dt>タグ</dt><dd>' + ((b.tags || []).length ? '<div class="tags">' + b.tags.map(function(t){ return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>' : '<span class="faint">なし</span>') + '</dd></div>' +
+    '</dl></div>';
+  var specs = b.specs.filter(function(s){ return s.k || s.v; });
+  h += '<div class="sec"><h2>仕様・設定値</h2><span class="sp"></span>' + (specs.length ? '<button class="btn sm ghost" data-act="specCopy">' + I.copy + 'コピー</button>' : '') + '<button class="btn sm" data-act="specEdit">' + I.edit + '編集</button></div>';
+  h += specs.length ? '<div class="card" style="overflow:hidden"><table class="spec">' + specs.map(function(s){
+    return s.k ? '<tr><th>' + esc(s.k) + '</th><td' + (s.v ? '' : ' class="faint"') + '>' + (s.v ? esc(s.v) : '—') + '</td></tr>' : '<tr><td colspan="2">' + esc(s.v) + '</td></tr>';
+  }).join('') + '</table></div>' : '<div class="card empty" style="padding:20px">IP アドレス・ファームウェアの版・寸法・パーツ構成など、あとで見返したい値を残せます。</div>';
+  h += '<div class="sec"><h2>段取りの状況</h2><span class="sp"></span><a class="lnk" href="#/b/' + b.id + '/prep">段取りへ</a></div>' + prepSummary(b);
+  var ag = agenda().filter(function(a){ return a.b === b; }).slice(0, 3);
+  if(ag.length) h += '<div class="sec"><h2>次の予定</h2></div><div class="card rows">' + ag.map(function(a){ return agendaRow(a, false); }).join('') + '</div>';
+  var last = b.logs.slice().sort(function(a, c){ return (c.date || '') > (a.date || '') ? 1 : -1; })[0];
+  if(last) h += '<div class="sec"><h2>最新の記録</h2><span class="sp"></span><a class="lnk" href="#/b/' + b.id + '/log">記録をすべて見る</a></div>' +
+    '<div class="card pad"><div class="mono small muted">' + fmtDate(last.date) + '</div><div style="white-space:pre-wrap">' + esc(last.text) + '</div>' + photosHTML(last) + '</div>';
+  return h;
+}
+
+function bomRow(b, x, showB){
+  var it = labItem(x.invId), q = Math.max(1, +x.qty || 1), unit = esc(x.unit || '個'), tool = isToolX(x);
+  var bits = [];
+  if(showB) bits.push(esc(b.title));
+  if(!showB) bits.push(esc(x.cat || ''));
+  if(x.price !== '' && x.price != null) bits.push('<span class="mono">' + yen(x.price) + (q > 1 ? ' × ' + q + ' = ' + yen(x.price * q) : '') + '</span>');
+  if(x.shop) bits.push(esc(x.shop));
+  if(x.invId){
+    if(it){
+      var free = labUnused(it), shortOf = !haveIt(x) && free < q;
+      bits.push('<span class="lab' + (shortOf ? ' short' : '') + '">台帳：' + (labIsTool(it) ? '空き ' : '未使用 ') + num(free) + esc(it.unit || '個') + (it.location ? '・' + esc(it.location) : '') + '</span>');
+    }else bits.push('<span class="lab">' + (LAB.db ? '台帳に見つかりません' : '研究デスクの台帳とつながっています') + '</span>');
+  }
+  if(x.note) bits.push(esc(short(x.note, 24)));
+  return '<div class="userow' + (haveIt(x) ? ' fin' : '') + '"><button class="main" data-act="bomEdit" data-b="' + b.id + '" data-id="' + x.id + '"><div class="t">' + esc(x.name) +
+    (x.model ? '<small>' + esc(x.model) + '</small>' : '') + ' <span class="mono small" style="font-weight:600">×' + num(q) + (unit !== '個' ? unit : '') + '</span></div>' +
+    '<div class="s">' + bits.filter(Boolean).join(' ・ ') + '</div></button>' +
+    '<button class="stbtn s-' + esc(x.state) + '" data-act="bomCycle" data-b="' + b.id + '" data-id="' + x.id + '" title="タップで次の状態へ">' + (haveIt(x) ? I.check : '') + esc(tool && x.state === '手元にある' ? '用意できた' : x.state) + '</button></div>';
+}
+function tabParts(b){
+  var parts = b.bom.filter(function(x){ return !isToolX(x); }), tools = b.bom.filter(isToolX);
+  var h = '';
+  var um = unlinkedMatches(b), cov = b.bom.filter(coveredByLab);
+  if(um.length) h += '<div class="card banner"><div class="main"><b>研究デスクの台帳に同じ部品が ' + um.length + ' 点あります</b><div class="s">つなぐと在庫と保管場所が見え、研究デスク側でもこの作品で使っていることがわかります</div></div><button class="btn sm pri" data-act="matchOpen">照合</button></div>';
+  if(cov.length) h += '<div class="card banner info"><div class="main"><b>台帳の在庫で足りるものが ' + cov.length + ' 点あります</b><div class="s">' + cov.slice(0, 4).map(function(x){ return esc(x.name); }).join('、') + ' — 買わずに済むかもしれません</div></div><button class="btn sm pri" data-act="covApply">手元にあるにする</button></div>';
+  var cost = bomCost(b), buy = b.bom.filter(function(x){ return x.state === '要購入'; });
+  h += '<div class="card"><div class="total"><span class="muted small">部品・工具の合計</span><span class="v">' + yen(cost) + '</span><span class="muted small">' + b.bom.length + '点' + (buy.length ? ' ・ これから買う ' + yen(toBuyCost(buy)) : '') + '</span></div></div>';
+  h += '<div class="btnrow" style="margin-top:12px"><button class="btn sm pri" data-act="bomNew">' + I.plus + '追加</button>' +
+    (LAB.db ? '<button class="btn sm" data-act="labPickOpen">' + I.chip + '研究デスクの台帳から</button>' : '') +
+    (LAB.db && b.bom.some(function(x){ return !x.invId && !x.noLab; }) ? '<button class="btn sm ghost" data-act="matchOpen">台帳と照合</button>' : '') +
+    (b.bom.length ? '<button class="btn sm ghost" data-act="bomCopy">' + I.copy + 'リストをコピー</button>' : '') + '</div>';
+  if(!b.bom.length) return h + '<div class="card empty" style="margin-top:12px">使う部品・材料と工具を並べておくと、<br>「買うもの」「揃ったもの」がひと目でわかり、買い物リストにも集まります。</div>' + (LAB.db ? '' : labHint());
+  var stOrder = { '要購入':0, '注文済み':1, '手元にある':2, '取り付け済み':3 };
+  var sortf = function(a, c){ return (stOrder[a.state] - stOrder[c.state]); };
+  if(parts.length) h += '<div class="grp"><h3>部品・材料 <b>' + parts.filter(haveIt).length + '/' + parts.length + '</b><span class="sp"></span></h3><div class="card">' + parts.slice().sort(sortf).map(function(x){ return bomRow(b, x); }).join('') + '</div></div>';
+  if(tools.length) h += '<div class="grp"><h3>工具・道具 <b>' + tools.filter(haveIt).length + '/' + tools.length + '</b></h3><div class="card">' + tools.slice().sort(sortf).map(function(x){ return bomRow(b, x); }).join('') + '</div></div>';
+  h += '<p class="small muted" style="margin:10px 2px">状態のボタンをタップすると「要購入 → 注文済み → 手元にある → 取り付け済み」と進みます。部品を「取り付け済み」にすると、研究デスクの台帳でも使用済みとして数えられます。</p>';
+  return h;
+}
+
+function tabPrep(b){
+  var h = '<div class="sec"><h2>準備</h2><span class="sp"></span><a class="lnk" href="#/b/' + b.id + '/parts">部品・工具へ</a></div>' + prepSummary(b);
+  var ss = upcomingSessions(b), past = b.sessions.filter(function(s){ return s.done; }).sort(function(a, c){ return (c.date || '') > (a.date || '') ? 1 : -1; });
+  h += '<div class="sec"><h2>作業日</h2><span class="sp"></span>' + (ss.length ? '<button class="btn sm ghost" data-act="calOpen">' + I.cal + 'カレンダーへ</button>' : '') + '<button class="btn sm pri" data-act="sessNew">' + I.plus + '作業日を決める</button></div>';
+  h += ss.length ? '<div class="card rows">' + ss.map(function(s){ return agendaRow({ type:'s', b:b, x:s, date:s.date }, false); }).join('') + '</div>'
+    : '<div class="card empty" style="padding:20px">いつ作業するかを決めておくと、予定にまとまり、カレンダーにも追加できます。</div>';
+  if(past.length) h += '<div class="small muted" style="margin:8px 2px">終わった作業日：' + past.slice(0, 6).map(function(s){ return '<button class="lnk small" style="color:var(--acc-ink)" data-act="sessEdit" data-b="' + b.id + '" data-id="' + s.id + '">' + fmtShort(s.date) + '</button>'; }).join('、') + '</div>';
+  var d = b.steps.filter(function(s){ return s.done; }).length;
+  h += '<div class="sec"><h2>手順</h2><span class="mono small faint">' + d + '/' + b.steps.length + '</span><span class="sp"></span>' + (b.steps.length ? '<button class="btn sm ghost" data-act="stepCopy">' + I.copy + 'コピー</button>' : '') + '<button class="btn sm pri" data-act="stepNew">' + I.plus + '追加</button></div>';
+  if(!b.steps.length) return h + '<div class="card empty" style="padding:20px">作業の順番を並べておくと、1 つずつチェックしながら進められます。<br>種類に合わせたひな形も入れられます。<div class="btnrow"><button class="btn sm" data-act="tplApply">ひな形を入れる</button></div></div>';
+  h += '<div class="card"><ol class="steps">' + b.steps.map(function(s, i){
+    return '<li class="' + (s.done ? 'done' : '') + '"><button class="chk' + (s.done ? ' on' : '') + '" data-act="stepToggle" data-id="' + s.id + '" aria-label="できた">' + I.check + '</button>' +
+      '<button class="main" data-act="stepEdit" data-id="' + s.id + '"><span class="no">' + (i + 1) + '</span><span class="tx"><span class="t">' + esc(s.title) + '</span>' +
+      (s.caution ? '<span class="caution">⚠ 注意が要る作業</span>' : '') + (s.body ? '<span class="b">' + esc(s.body) + '</span>' : '') +
+      (s.mins || (s.done && s.doneDate) ? '<span class="m">' + (s.mins ? '目安 ' + fmtMins(+s.mins) : '') + (s.done && s.doneDate ? (s.mins ? ' ・ ' : '') + fmtShort(s.doneDate) + ' 完了' : '') + '</span>' : '') + '</span></button>' +
+      '<span class="mv"><button data-act="stepMove" data-id="' + s.id + '" data-d="-1" aria-label="上へ"' + (i ? '' : ' disabled') + '>▲</button><button data-act="stepMove" data-id="' + s.id + '" data-d="1" aria-label="下へ"' + (i < b.steps.length - 1 ? '' : ' disabled') + '>▼</button></span></li>';
+  }).join('') + '</ol></div>';
+  return h;
+}
+
+function photosHTML(l){
+  return l.photos.length ? '<div class="photos">' + l.photos.map(function(k){ return '<img data-img="' + esc(k + '_t') + '" data-act="photoZoom" data-k="' + esc(k) + '" alt="写真">'; }).join('') + '</div>' : '';
+}
+function tabLog(b){
+  var h = '<div class="sec"><h2>製作・使用の記録</h2><span class="mono small faint">' + b.logs.length + '</span></div>' +
+    '<div class="card"><div class="logadd"><textarea id="logText" placeholder="やったこと・うまくいかなかったこと・使ってみた感想"></textarea>' +
+    '<div class="pend" id="pend">' + pendHTML() + '</div>' +
+    '<div class="btnrow"><input type="date" id="logDate" value="' + todayISO() + '" style="width:auto;flex:1;max-width:180px"><button class="btn" data-act="photoAdd">' + I.camera + '写真</button><span class="sp" style="flex:1"></span><button class="btn pri" data-act="logAdd">記録する</button></div></div>';
+  var logs = b.logs.slice().sort(function(a, c){ return (c.date || '') > (a.date || '') ? 1 : (c.date === a.date ? ((c.ts || 0) - (a.ts || 0)) : -1); });
+  if(logs.length) h += '<div class="tl">' + logs.map(function(l){
+    return '<div class="it' + (l.maint ? ' mt' : '') + '"><div class="d">' + fmtDate(l.date) + (l.maint ? ' ・ メンテ' : '') + '</div><div class="x">' + esc(l.text) + '</div>' + photosHTML(l) + '<button data-act="logEdit" data-id="' + l.id + '">編集</button></div>';
+  }).join('') + '</div>';
+  return h + '</div>';
+}
+function pendHTML(){
+  return UI.pend.map(function(p, i){ return '<span class="pi"><img src="' + p.url + '" alt=""><button data-act="pendDel" data-i="' + i + '" aria-label="外す">✕</button></span>'; }).join('');
+}
+
+function tabMaint(b){
+  var h = '<div class="sec"><h2>メンテナンス</h2><span class="sp"></span>' + (b.maint.length ? '<button class="btn sm ghost" data-act="calOpen">' + I.cal + 'カレンダーへ</button>' : '') + '<button class="btn sm pri" data-act="maintNew">' + I.plus + '追加</button></div>';
+  if(!b.maint.length) return h + '<div class="card empty">電池交換・フィルター掃除・ファームウェア更新・ネジの点検など、<br>完成後にくり返しやることを周期つきで登録できます。次にやる日が「予定」に並びます。</div>';
+  if(b.status !== '稼働中') h += '<p class="small muted" style="margin:0 2px 8px">「稼働中」の作品のメンテナンスが予定に並びます（保留・引退中は出ません）。</p>';
+  var ms = b.maint.map(function(m){ return { type:'m', b:b, x:m, date:maintDue(b, m) }; }).sort(function(a, c){ return (a.date || '9999') < (c.date || '9999') ? -1 : 1; });
+  return h + '<div class="card rows">' + ms.map(function(a){ return agendaRow(a, false); }).join('') + '</div>';
+}
+
+function viewPlan(){
+  brandBar();
+  var all = agenda().filter(function(a){ return a.type === 's' || a.b.status === '稼働中'; });
+  var noDate = DB.builds.filter(function(b){ return ACTIVE.indexOf(b.status) >= 0 && !upcomingSessions(b).length; });
+  var h = '<div class="btnrow" style="justify-content:flex-end"><button class="btn sm" data-act="calOpen">' + I.cal + 'カレンダーに追加（.ics）</button></div>';
+  if(!all.length && !noDate.length) return h + '<div class="card empty" style="margin-top:10px"><div class="big">予定はまだありません</div>作品の「段取り」で作業日を決めたり、<br>「メンテ」で周期を登録するとここに集まります。</div>';
+  var groups = [
+    ['過ぎている', function(a){ return a.date && daysUntil(a.date) < 0; }],
+    ['今週（7日以内）', function(a){ return a.date && daysUntil(a.date) >= 0 && daysUntil(a.date) <= 7; }],
+    ['今月（30日以内）', function(a){ return a.date && daysUntil(a.date) > 7 && daysUntil(a.date) <= 30; }],
+    ['それ以降', function(a){ return a.date && daysUntil(a.date) > 30; }],
+    ['日付未定', function(a){ return !a.date; }]
+  ];
+  groups.forEach(function(g){
+    var items = all.filter(g[1]);
+    if(!items.length) return;
+    h += '<div class="sec"><h2>' + g[0] + '</h2><span class="mono small faint">' + items.length + '</span></div><div class="card rows">' + items.map(function(a){ return agendaRow(a); }).join('') + '</div>';
+  });
+  if(noDate.length) h += '<div class="sec"><h2>作業日が決まっていない作品</h2></div><div class="card rows">' + noDate.map(function(b){
+    var left = b.steps.filter(function(s){ return !s.done; });
+    return '<div class="row"><a class="main" style="color:inherit" href="#/b/' + b.id + '/prep"><div class="t">' + esc(b.title) + '</div><div class="s">' + esc(b.status) + (left.length ? ' ・ 次：' + esc(left[0].title) : '') + '</div></a><button class="btn sm" data-act="sessNew" data-b="' + b.id + '">日を決める</button></div>';
+  }).join('') + '</div>';
+  return h;
+}
+
+/* ---------- 買い物 ---------- */
+function shopItems(){
+  var out = [];
+  DB.builds.forEach(function(b){
+    if(b.status === '引退') return;
+    b.bom.forEach(function(x){ if(x.state === '要購入' || x.state === '注文済み') out.push({ b:b, x:x }); });
+  });
+  return out;
+}
+function viewShop(){
+  brandBar();
+  var all = shopItems(), buy = all.filter(function(y){ return y.x.state === '要購入'; }), ord = all.filter(function(y){ return y.x.state === '注文済み'; });
+  var lows = labInv().filter(labLow);
+  var h = '<div class="stats" style="grid-template-columns:repeat(3,1fr)">' + stat('買うもの', buy.length, '点') + stat('予算の目安', yen(toBuyCost(buy.map(function(y){ return y.x; })))) + stat('届くのを待つ', ord.length, '点') + '</div>';
+  if(!all.length) h += '<div class="card empty" style="margin-top:12px"><div class="big">買うものはありません</div>作品の「部品・工具」で「要購入」にしたものがここに集まります。</div>';
+  if(buy.length){
+    var cov = buy.filter(function(y){ return coveredByLab(y.x); });
+    if(cov.length) h += '<div style="height:12px"></div><div class="card banner info"><div class="main"><b>' + cov.length + ' 点は研究デスクの台帳に在庫があります</b><div class="s">' + cov.slice(0, 4).map(function(y){ return esc(y.x.name); }).join('、') + '</div></div><button class="btn sm pri" data-act="covApplyAll">手元にあるにする</button></div>';
+    var byShop = {};
+    buy.forEach(function(y){ var s = y.x.shop || '購入先未定'; (byShop[s] = byShop[s] || []).push(y); });
+    var shops = Object.keys(byShop).sort(function(a, c){ return a === '購入先未定' ? 1 : c === '購入先未定' ? -1 : byShop[c].length - byShop[a].length; });
+    h += '<div class="sec"><h2>要購入</h2><span class="sp"></span><button class="btn sm ghost" data-act="shopCopy">' + I.copy + 'リストをコピー</button></div>';
+    h += shops.map(function(s){
+      var l = byShop[s];
+      return '<div class="grp"><h3>' + esc(s) + ' <b>' + l.length + '</b><span class="sp"></span><span class="mono small">' + yen(toBuyCost(l.map(function(y){ return y.x; }))) + '</span></h3><div class="card">' + l.map(function(y){ return bomRow(y.b, y.x, true); }).join('') + '</div></div>';
+    }).join('');
+  }
+  if(ord.length) h += '<div class="sec"><h2>注文済み・届くのを待つ</h2></div><div class="card">' + ord.map(function(y){ return bomRow(y.b, y.x, true); }).join('') + '</div>';
+  if(lows.length) h += '<div class="sec"><h2>研究デスクで補充したいもの</h2><span class="sp"></span><span class="small faint">未使用が補充ライン以下</span></div><div class="card rows">' + lows.map(function(i){
+    return '<button class="row" data-act="labItem" data-id="' + esc(i.id) + '"><div class="main"><div class="t">' + esc(i.name) + (i.model ? '<small>' + esc(i.model) + '</small>' : '') + '</div><div class="s">' + esc(i.category) + (i.shop ? ' ・ ' + esc(i.shop) : '') + (i.location ? ' ・ ' + esc(i.location) : '') + '</div></div>' +
+      '<div class="qty"><span class="n low">' + num(labUnused(i)) + '<small>補充 ' + esc(i.minQty) + '</small></span></div></button>';
+  }).join('') + '</div>';
+  return h;
+}
+function shopText(){
+  var buy = shopItems().filter(function(y){ return y.x.state === '要購入'; }), byShop = {};
+  buy.forEach(function(y){ var s = y.x.shop || '購入先未定'; (byShop[s] = byShop[s] || []).push(y); });
+  return Object.keys(byShop).map(function(s){
+    return '■ ' + s + '\n' + byShop[s].map(function(y){
+      var x = y.x;
+      return '□ ' + x.name + (x.model ? ' ' + x.model : '') + ' ×' + (x.qty || 1) + (x.unit && x.unit !== '個' ? x.unit : '') + (x.price ? '（' + yen(x.price * Math.max(1, +x.qty || 1)) + '）' : '') + ' — ' + y.b.title + (x.url ? '\n   ' + x.url : '');
+    }).join('\n');
+  }).join('\n\n');
+}
+
+/* ---------- 部品・工具（研究デスクの台帳） ---------- */
+function viewParts(){
+  brandBar();
+  var h = '<div class="srcnote"><span class="dot' + (LAB.db ? '' : ' off') + '"></span><span>' + esc(labSrcLabel()) + '</span><span class="sp" style="flex:1"></span><a class="btn sm ghost" href="' + LAB_URL + '#/inv" target="_blank" rel="noopener">' + I.ext + '研究デスク</a></div>';
+  if(!LAB.db){
+    return h + '<div class="card empty"><div class="big">研究デスクの台帳を読み込んでいません</div>' +
+      '<div style="text-align:left;max-width:460px;margin:10px auto 0;font-size:14px">手持ちの電子部品や工具は、研究デスク（研究管理アプリ）の「部品・工具」でまとめて管理し、ここからたどれるようにしています。次のどれかで読み込めます。<ol style="padding-left:20px;margin:8px 0 0"><li>同じブラウザで研究デスクを開いたことがあれば、自動で読み込みます</li><li>両方のアプリで、同じ Google アカウントの同期をオンにする（iPhone のホーム画面から使うとき）</li><li>研究デスクの「設定 → バックアップを書き出す」で作った JSON を読み込む</li></ol></div>' +
+      '<div class="btnrow"><a class="btn" href="' + LAB_URL + '" target="_blank" rel="noopener">' + I.ext + '研究デスクを開く</a><button class="btn pri" data-act="labImport">バックアップを読み込む</button></div></div>';
+  }
+  var inv = labInv();
+  var mine = {}; DB.builds.forEach(function(b){ b.bom.forEach(function(x){ if(x.invId) mine[x.invId] = (mine[x.invId] || 0) + 1; }); });
+  var nMine = inv.filter(function(i){ return mine[i.id]; }).length;
+  h += '<div class="stats">' + stat('品目', inv.length) + stat('自作で使用', nMine) + stat('補充したい', inv.filter(labLow).length) + stat('推定金額', yen(inv.reduce(function(s, i){ return s + (+i.price || 0) * (+i.qty || 0); }, 0))) + '</div>';
+  h += '<div style="height:12px"></div><div class="search">' + I.search + '<input type="search" id="partsQ" placeholder="名前・型番・場所・タグで検索" value="' + esc(UI.partsQ) + '"></div>';
+  var counts = {}; inv.forEach(function(i){ counts[i.category] = (counts[i.category] || 0) + 1; });
+  h += '<div class="chips"><button class="chip' + (UI.partsCat === 'すべて' ? ' on' : '') + '" data-act="partsCat" data-v="すべて">すべて <b>' + inv.length + '</b></button>' +
+    INV_CATS.filter(function(c){ return counts[c]; }).map(function(c){ return '<button class="chip' + (UI.partsCat === c ? ' on' : '') + '" data-act="partsCat" data-v="' + esc(c) + '">' + esc(c) + ' <b>' + counts[c] + '</b></button>'; }).join('') + '</div>';
+  h += '<div class="toolbar"><label class="toggle"><input type="checkbox" data-chg="partsMine"' + (UI.partsMine ? ' checked' : '') + '>自作で使っているものだけ</label></div>';
+  h += '<div id="partsList">' + partsListHTML(mine) + '</div>';
+  return h;
+}
+function partsListHTML(mine){
+  if(!mine){ mine = {}; DB.builds.forEach(function(b){ b.bom.forEach(function(x){ if(x.invId) mine[x.invId] = (mine[x.invId] || 0) + 1; }); }); }
+  var ws = UI.partsQ.toLowerCase().split(/\s+/).filter(Boolean);
+  var items = labInv().filter(function(i){
+    if(UI.partsCat !== 'すべて' && i.category !== UI.partsCat) return false;
+    if(UI.partsMine && !mine[i.id]) return false;
+    var hay = [i.name, i.model, i.category, i.location, i.shop, i.note].concat(i.tags || []).join(' ').toLowerCase();
+    return ws.every(function(w){ return hay.indexOf(w) >= 0; });
+  });
+  if(!items.length) return '<div class="card empty" style="margin-top:12px">条件に合うものがありません</div>';
+  var groups = {};
+  items.forEach(function(i){ (groups[i.category || 'その他'] = groups[i.category || 'その他'] || []).push(i); });
+  return INV_CATS.concat(Object.keys(groups).filter(function(c){ return INV_CATS.indexOf(c) < 0; })).filter(function(c){ return groups[c]; }).map(function(c){
+    var g = groups[c].sort(function(a, b){ return a.name.localeCompare(b.name, 'ja'); });
+    return '<div class="grp"><h3>' + esc(c) + ' <b>' + g.length + '</b></h3><div class="card rows">' + g.map(function(i){
+      var mk = makerUsesOf(i.id), lb = labUsesOf(i.id), unit = esc(i.unit || '個'), low = labLow(i);
+      var line = [i.location ? esc(i.location) : '',
+        mk.length ? '<span class="lab">自作 ' + mk.map(function(y){ return esc(short(y.b.title, 12)); }).join('・') + '</span>' : '',
+        lb.length ? '研究 ' + lb.length + '件' : '',
+        low ? '<span style="color:var(--bad)">補充したい</span>' : ''].filter(Boolean).join(' ・ ');
+      return '<button class="row" data-act="labItem" data-id="' + esc(i.id) + '"><div class="main"><div class="t">' + esc(i.name) + (i.model ? '<small>' + esc(i.model) + '</small>' : '') + '</div><div class="s">' + (line || esc(i.category)) + '</div></div>' +
+        '<div class="qty"><span class="n' + (low ? ' low' : '') + '">' + num(labUnused(i)) + '<small>' + (labIsTool(i) ? '空き/' : '未使用/') + num(i.qty) + unit + '</small></span></div></button>';
+    }).join('') + '</div></div>';
+  }).join('');
+}
+
+/* ---------- 設定 ---------- */
+function viewSettings(){
+  brandBar();
+  var th = DB.settings.theme || 'auto';
+  var bytes = new Blob([localStorage.getItem(KEY) || '']).size;
+  return syncSettingsHTML() +
+    '<div class="sec"><h2>研究デスクとの連携</h2></div><div class="card">' +
+    '<div class="setrow"><div class="main">部品・工具の台帳<div class="s">' + esc(labSrcLabel()) + (LAB.db ? ' ・ ' + labInv().length + ' 品目' : '') + '</div></div><a class="btn sm" href="' + LAB_URL + '" target="_blank" rel="noopener">' + I.ext + '開く</a></div>' +
+    '<div class="setrow"><div class="main"><div class="s">電子部品や工具は研究デスクの台帳で管理し、こちらは読むだけです。作品の部品表から台帳の部品につなぐと、在庫と保管場所を確かめられ、「取り付け済み」にした数は研究デスクでも使用済みとして数えられます。研究デスクの部品の画面からも、どの作品で使っているかをたどれます。<br>読み込み元：① 同じブラウザの研究デスク（自動） ② Google 同期（同じアカウントで両方ログイン） ③ バックアップ JSON</div></div></div>' +
+    '<div class="setrow"><div class="main">研究デスクのバックアップを読み込む<div class="s">研究デスクの「設定 → バックアップを書き出す」で作った JSON から台帳だけを取り込みます</div></div><button class="btn sm" data-act="labImport">読み込む</button></div>' +
+    (LAB.src && LAB.src !== 'local' ? '<div class="setrow"><div class="main">取り込んだ台帳を消す<div class="s">同期やファイルから取り込んだ台帳の写しを、この端末から消します</div></div><button class="btn sm" data-act="labForget">消す</button></div>' : '') +
+    '</div>' +
+    '<div class="sec"><h2>表示</h2></div><div class="card">' +
+    '<div class="setrow"><div class="main">テーマ</div><select data-chg="theme">' +
+    [['auto','端末に合わせる'],['light','ライト'],['dark','ダーク']].map(function(o){ return '<option value="' + o[0] + '"' + (th === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+    '</select></div></div>' +
+    '<div class="sec"><h2>データ</h2></div><div class="card">' +
+    '<div class="setrow"><div class="main">バックアップを書き出す<div class="s">作品・部品表・段取り・記録（写真を含む）を JSON で保存</div></div><button class="btn sm" data-act="exportJson">書き出す</button></div>' +
+    '<div class="setrow"><div class="main">バックアップから読み込む<div class="s">いまのデータは読み込んだ内容に置き換わります</div></div><button class="btn sm" data-act="importJson">読み込む</button></div>' +
+    '<div class="setrow"><div class="main">部品表を CSV で<div class="s">全作品の部品・工具を 1 つの表に</div></div><button class="btn sm" data-act="bomCsv">書き出す</button></div>' +
+    '<div class="setrow"><div class="main">サンプルデータを追加<div class="s">電子工作・自作PC・DIY の例を 3 件追加します</div></div><button class="btn sm" data-act="loadSample">追加</button></div>' +
+    '<div class="setrow"><div class="main">すべて削除<div class="s mono" id="usage">記録 ' + (bytes / 1024).toFixed(1) + ' KB</div></div><button class="btn sm danger" data-act="wipe">削除</button></div>' +
+    '</div>' +
+    '<div class="sec"><h2>このアプリについて</h2></div><div class="card pad small muted">' +
+    'データはこの端末のブラウザ（localStorage と、写真は IndexedDB）に保存されます。同期を使う場合だけ、自分の Google ドライブのアプリ専用領域にも保存され、それ以外には送信しません。研究デスクの台帳は読むだけで、書き換えません。<br>' +
+    'ブラウザのデータを消すと記録も消えるので、ときどきバックアップを書き出しておくと安心です。</div>';
+}
+
+/* ============================================================
+   ルーティングと描画
+   ============================================================ */
+function parseRoute(){ return location.hash.replace(/^#\/?/, '').split('/').filter(Boolean); }
+function render(keepScroll){
+  var parts = parseRoute(), v = parts[0] || 'home', nav = v, html;
+  if(v === 'b'){
+    var b = getB(parts[1]);
+    if(!b){ location.replace('#/'); return; }
+    UI.cur = b; html = viewBuild(b, parts[2] || 'overview'); nav = 'home';
+  }else if(v === 'plan') html = viewPlan();
+  else if(v === 'shop') html = viewShop();
+  else if(v === 'parts') html = viewParts();
+  else if(v === 'settings'){ html = viewSettings(); setTimeout(showUsage, 0); }
+  else { nav = 'home'; html = viewHome(); }
+  if(!(v === 'b' && parts[2] === 'log') && UI.pend.length){ UI.pend.forEach(function(p){ URL.revokeObjectURL(p.url); }); UI.pend = []; }
+  var y = window.scrollY;
+  $('#view').innerHTML = html;
+  document.querySelectorAll('nav.tabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.nav === nav); });
+  var nb = shopItems().filter(function(y){ return y.x.state === '要購入'; }).length, bd = $('#shopBadge');
+  bd.hidden = !nb; bd.textContent = nb > 99 ? '99+' : nb;
+  hydrate($('#view'));
+  var segOn = $('.seg a.on');
+  if(segOn){ var sg = segOn.parentNode; sg.scrollLeft = segOn.offsetLeft - (sg.clientWidth - segOn.offsetWidth) / 2; }
+  if(v === 'parts' && $('#partsQ')){
+    $('#partsQ').addEventListener('input', function(e){ UI.partsQ = e.target.value; $('#partsList').innerHTML = partsListHTML(); });
+    /* 研究デスクからのリンク（#/parts/<部品id>）なら、その部品を開く */
+    if(parts[1] && labItem(decodeURIComponent(parts[1]))){
+      var pit = labItem(decodeURIComponent(parts[1]));
+      history.replaceState(null, '', '#/parts');
+      setTimeout(function(){ labItemSheet(pit); }, 50);
+    }
+  }
+  var key = parts.join('/');
+  if(keepScroll) window.scrollTo(0, y);
+  else if(key !== UI.lastRoute) window.scrollTo(0, 0);
+  UI.lastRoute = key;
+}
+window.addEventListener('hashchange', function(){ closeSheet(); render(false); });
+
+function applyTheme(){
+  var t = DB.settings.theme || 'auto';
+  if(t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+
+/* ============================================================
+   操作
+   ============================================================ */
+function bOf(el){ return el.dataset.b ? getB(el.dataset.b) : UI.cur; }
+function findIn(b, k, id){ return b && b[k].find(function(x){ return x.id === id; }); }
+function nextState(x){
+  var l = isToolX(x) ? TOOL_STATES : PART_STATES, i = l.indexOf(x.state);
+  return l[(i + 1) % l.length];
+}
+var ACT = {
+  closeSheet: closeSheet,
+  buildNew: function(){ buildForm(null); },
+  buildEdit: function(){ buildForm(UI.cur); },
+  filter: function(el){ UI.filter = el.dataset.v; render(true); },
+  kindFilter: function(el){ UI.kind = el.dataset.v; render(true); },
+  specEdit: function(){ specForm(UI.cur); },
+  specCopy: function(){ copyText(UI.cur.specs.map(function(s){ return s.k ? s.k + '：' + s.v : s.v; }).join('\n'), '仕様をコピーしました'); },
+  bomNew: function(){ bomForm(UI.cur, null); },
+  bomEdit: function(el){ var b = bOf(el); bomForm(b, findIn(b, 'bom', el.dataset.id)); },
+  bomCycle: function(el){
+    var b = bOf(el), x = findIn(b, 'bom', el.dataset.id);
+    if(!x) return;
+    var to = nextState(x);
+    if(to === '要購入' && !confirm('「' + x.name + '」を「要購入」に戻しますか？')) return;
+    x.state = to; touch(b); save(); render(true);
+    var it = labItem(x.invId);
+    toast('「' + short(x.name, 18) + '」→ ' + (isToolX(x) && to === '手元にある' ? '用意できた' : to) + (it && to === '取り付け済み' ? '（研究デスクの未使用 ' + num(labUnused(it)) + (it.unit || '個') + '）' : ''));
+  },
+  bomCopy: function(){
+    var b = UI.cur;
+    copyText(b.title + ' の部品・工具\n' + b.bom.map(function(x){ return (haveIt(x) ? '☑ ' : '□ ') + x.name + (x.model ? ' ' + x.model : '') + ' ×' + (x.qty || 1) + (x.unit && x.unit !== '個' ? x.unit : '') + '（' + x.state + '）' + (x.price ? ' ' + yen(x.price * Math.max(1, +x.qty || 1)) : ''); }).join('\n'), '部品リストをコピーしました');
+  },
+  labPickOpen: function(){ labPicker(UI.cur); },
+  labPick: function(el){
+    var b = UI.pickFor, it = labItem(el.dataset.id);
+    if(!b || !it) return;
+    var x = bomFromLab(b, it);
+    closeSheet(); render(true); toast('「' + it.name + '」を追加しました（' + x.state + '）');
+  },
+  matchOpen: function(){ matchSheet(UI.cur); },
+  matchApply: function(){
+    var m = UI.matchFor, n = 0, stock = $('#mtStock') && $('#mtStock').checked;
+    if(!m) return;
+    document.querySelectorAll('#sheetBody select[data-mt]').forEach(function(sel){
+      var x = m.list[+sel.dataset.mt], v = sel.value;
+      if(!x || !v) return;
+      if(v === '-'){ x.noLab = true; return; }
+      x.invId = v; delete x.noLab; n++;
+      if(stock && coveredByLab(x)) x.state = '手元にある';
+    });
+    touch(m.b); save(); closeSheet(); render(true); toast(n ? n + ' 点を台帳につなぎました' : '変更しました');
+  },
+  covApply: function(){ var b = UI.cur, l = b.bom.filter(coveredByLab); l.forEach(function(x){ x.state = '手元にある'; }); touch(b); save(); render(true); toast(l.length + ' 点を「手元にある」にしました'); },
+  covApplyAll: function(){
+    var n = 0;
+    shopItems().forEach(function(y){ if(coveredByLab(y.x)){ y.x.state = '手元にある'; touch(y.b); n++; } });
+    save(); render(true); toast(n + ' 点を「手元にある」にしました');
+  },
+  labItem: function(el){ var it = labItem(el.dataset.id); if(it) labItemSheet(it); },
+  labToBuild: function(el){ var it = labItem(el.dataset.id); if(it) nextSheet(function(){ buildChooser(it); }); },
+  labToBuildGo: function(el){
+    var it = labItem(el.dataset.id), b = getB(el.dataset.b);
+    if(!it || !b) return;
+    bomFromLab(b, it); closeSheet(); location.hash = '#/b/' + b.id + '/parts'; toast('「' + it.name + '」を「' + short(b.title, 14) + '」に追加しました');
+  },
+  partsCat: function(el){ UI.partsCat = el.dataset.v; render(true); },
+  labImport: function(){ $('#labFile').click(); },
+  labForget: function(){ if(!confirm('取り込んだ研究デスクの台帳の写しを消しますか？（研究デスク本体のデータは消えません）')) return; try{ localStorage.removeItem(LAB_CACHE); }catch(e){} loadLab(); render(true); },
+  stepNew: function(){ stepForm(UI.cur, null); },
+  stepEdit: function(el){ stepForm(UI.cur, findIn(UI.cur, 'steps', el.dataset.id)); },
+  stepToggle: function(el){
+    var b = UI.cur, s = findIn(b, 'steps', el.dataset.id);
+    if(!s) return;
+    s.done = !s.done; s.doneDate = s.done ? todayISO() : '';
+    if(s.done && b.status !== '製作中' && (b.status === 'アイデア' || b.status === '段取り中')) b.status = '製作中';
+    touch(b); save(); render(true);
+    if(s.done && b.steps.every(function(x){ return x.done; }) && b.status === '製作中' && confirm('手順がすべて終わりました。「稼働中」にしますか？（完成日を今日にします）')){
+      b.status = '稼働中'; b.doneDate = b.doneDate || todayISO(); touch(b); save(); render(true);
+    }
+  },
+  stepMove: function(el){
+    var b = UI.cur, i = b.steps.findIndex(function(x){ return x.id === el.dataset.id; }), j = i + (+el.dataset.d);
+    if(i < 0 || j < 0 || j >= b.steps.length) return;
+    var t = b.steps[i]; b.steps[i] = b.steps[j]; b.steps[j] = t;
+    touch(b); save(); render(true);
+  },
+  stepCopy: function(){ var b = UI.cur; copyText(b.title + ' の手順\n' + b.steps.map(function(s, i){ return (i + 1) + '. ' + (s.done ? '[済] ' : '') + s.title + (s.mins ? '（' + fmtMins(+s.mins) + '）' : '') + (s.body ? '\n   ' + s.body.replace(/\n/g, '\n   ') : ''); }).join('\n'), '手順をコピーしました'); },
+  tplApply: function(){ var b = UI.cur; applyTemplate(b); touch(b); save(); render(true); toast(TEMPLATES[b.kind] ? b.kind + 'のひな形を入れました' : 'この種類にはひな形がありません'); },
+  sessNew: function(el){ var b = bOf(el); if(b) sessionForm(b, null); },
+  sessEdit: function(el){ var b = bOf(el); sessionForm(b, findIn(b, 'sessions', el.dataset.id)); },
+  sessDone: function(el){
+    var b = bOf(el), s = findIn(b, 'sessions', el.dataset.id);
+    if(!s) return;
+    s.done = true; touch(b); save(); render(true); toast('作業日を終わりにしました。やったことは「記録」に残せます');
+  },
+  maintNew: function(){ maintForm(UI.cur, null); },
+  maintEdit: function(el){ var b = bOf(el); maintForm(b, findIn(b, 'maint', el.dataset.id)); },
+  maintDone: function(el){
+    var b = bOf(el), m = findIn(b, 'maint', el.dataset.id);
+    if(!m) return;
+    var t = todayISO();
+    m.last = t; if(m.history.indexOf(t) < 0) m.history.push(t);
+    b.logs.push({ id:uid(), date:t, text:'メンテ：' + m.title, maint:true, photos:[], ts:Date.now() });
+    touch(b); save(); render(true); toast('記録しました。次は ' + fmtDate(maintDue(b, m)));
+  },
+  calOpen: function(){ calSheet(); },
+  calShare: function(){
+    var list = calSelected();
+    if(!list.length) return toast('送る予定を選んでください');
+    var text = buildICS(list), name = calFileName(), file = null;
+    try{ file = new File([text], name, { type:'text/calendar' }); }catch(e){}
+    if(file && navigator.canShare && navigator.canShare({ files:[file] })){
+      navigator.share({ files:[file], title:'自作デスク' }).then(function(){
+        markCalSent(list); closeSheet(); toast('送りました。カレンダー側で取り込み先を選んでください');
+      }).catch(function(err){ if(err && err.name === 'AbortError') return; downloadICS(text, name, list); });
+    }else downloadICS(text, name, list);
+  },
+  calDownload: function(){ var list = calSelected(); if(!list.length) return toast('送る予定を選んでください'); downloadICS(buildICS(list), calFileName(), list); },
+  photoAdd: function(){ $('#photoFile').click(); },
+  pendDel: function(el){ var p = UI.pend.splice(+el.dataset.i, 1)[0]; if(p) URL.revokeObjectURL(p.url); $('#pend').innerHTML = pendHTML(); },
+  photoZoom: function(el){ lightbox(el.dataset.k); },
+  logAdd: function(){
+    var b = UI.cur, t = $('#logText').value.trim(), pend = UI.pend.slice();
+    if(!t && !pend.length){ $('#logText').focus(); return; }
+    var date = $('#logDate').value || todayISO();
+    var go = function(keys){
+      b.logs.push({ id:uid(), date:date, text:t, photos:keys, ts:Date.now() });
+      pend.forEach(function(p){ URL.revokeObjectURL(p.url); }); UI.pend = [];
+      touch(b); save(); render(true); toast('記録しました');
+    };
+    if(pend.length) storePhotos(pend).then(go).catch(function(){ toast('写真を保存できませんでした'); });
+    else go([]);
+  },
+  logEdit: function(el){ logForm(UI.cur, findIn(UI.cur, 'logs', el.dataset.id)); },
+  logPhotoDel: function(el){
+    var b = getB(el.dataset.b), l = findIn(b, 'logs', el.dataset.l);
+    if(!l || !confirm('この写真を外しますか？')) return;
+    l.photos = l.photos.filter(function(k){ return k !== el.dataset.k; }); dropPhoto(el.dataset.k);
+    touch(b); save(); render(true); el.remove();
+  },
+  shopCopy: function(){ copyText(shopText(), '買い物リストをコピーしました'); },
+  syncNow: function(){ if(SYNC.state === 'login' || !tokenOK()) login(false); else syncNow(true); },
+  syncLogin: function(){ login(false); },
+  syncLogout: function(){ if(confirm('この端末の同期をやめますか？（データは消えません）')){ logout(); render(true); toast('ログアウトしました'); } },
+  exportJson: function(){
+    var keys = [];
+    DB.builds.forEach(function(b){ b.logs.forEach(function(l){ l.photos.forEach(function(k){ keys.push(k, k + '_t'); }); }); });
+    if(!keys.length){ download('maker-desk-backup-' + todayISO() + '.json', JSON.stringify(DB, null, 2), 'application/json'); return; }
+    toast('写真をまとめています…');
+    var files = {};
+    Promise.all(keys.map(function(k){ return FILES.get(k).then(function(b){ return b ? blobToDataURL(b).then(function(u){ files[k] = u; }) : null; }); })).then(function(){
+      download('maker-desk-backup-' + todayISO() + '.json', JSON.stringify(Object.assign({}, DB, { files:files })), 'application/json');
+    }).catch(function(){ toast('書き出しに失敗しました'); });
+  },
+  importJson: function(){ $('#importFile').click(); },
+  bomCsv: function(){
+    var rows = [['作品','種類','状態','名前','型番・規格','分類','扱い','数','単位','単価','合計','部品の状態','購入先','URL','研究デスクの台帳','保管場所','メモ']];
+    DB.builds.forEach(function(b){ b.bom.forEach(function(x){
+      var it = labItem(x.invId), q = Math.max(1, +x.qty || 1);
+      rows.push([b.title, b.kind, b.status, x.name, x.model, x.cat, isToolX(x) ? '工具' : '部品', q, x.unit, x.price, x.price === '' || x.price == null ? '' : x.price * q, x.state, x.shop, x.url, it ? it.name + (it.model ? ' ' + it.model : '') : (x.invId ? '（つながっている）' : ''), it ? it.location : '', x.note]);
+    }); });
+    if(rows.length === 1) return toast('部品表がまだありません');
+    download('maker-desk-bom-' + todayISO() + '.csv', csv(rows), 'text/csv');
+  },
+  loadSample: function(){ addSample(); save(); location.hash = '#/'; render(false); toast('サンプルを追加しました'); },
+  wipe: function(){
+    if(!confirm('すべての作品・部品表・段取り・記録を削除します。' + (SM.signedIn ? '同期している他の端末からも削除されます。' : '') + 'よろしいですか？（研究デスクの台帳は消えません）')) return;
+    if(!confirm('本当に削除しますか？ 元に戻せません。')) return;
+    var th = DB.settings.theme, del = DB.deleted; DB = blank(); DB.settings.theme = th; DB.deleted = del; save(); FILES.clear().catch(function(){}); forgetURLs(); location.hash = '#/'; render(false); toast('削除しました');
+  }
+};
+
+document.addEventListener('click', function(e){
+  if(e.target.closest('[data-lb]')){ $('#lightbox').hidden = true; return; }
+  var el = e.target.closest('[data-act]');
+  if(!el || !ACT[el.dataset.act]) return;
+  if(el.tagName === 'A' && el.dataset.act === 'closeSheet'){ closeSheet(); return; }
+  e.preventDefault();
+  ACT[el.dataset.act](el, e);
+});
+$('#lightbox').addEventListener('click', function(e){ if(e.target.id === 'lightbox' || e.target.id === 'lbImg') $('#lightbox').hidden = true; });
+document.addEventListener('change', function(e){
+  var k = e.target.dataset.chg;
+  if(k === 'theme'){ DB.settings.theme = e.target.value; save(); applyTheme(); }
+  else if(k === 'partsMine'){ UI.partsMine = e.target.checked; $('#partsList').innerHTML = partsListHTML(); }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  if(!$('#lightbox').hidden){ $('#lightbox').hidden = true; return; }
+  closeSheet();
+});
+
+$('#photoFile').addEventListener('change', function(e){
+  var fs = Array.prototype.slice.call(e.target.files || []); e.target.value = '';
+  if(!fs.length) return;
+  toast('写真を準備しています…');
+  Promise.all(fs.map(function(f){ return preparePhoto(f).catch(function(){ return null; }); })).then(function(r){
+    r.filter(Boolean).forEach(function(p){ UI.pend.push(p); });
+    if($('#pend')) $('#pend').innerHTML = pendHTML();
+    if(r.some(function(x){ return !x; })) toast('読み込めない写真がありました');
+  });
+});
+$('#importFile').addEventListener('change', function(e){
+  var f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try{
+      var d = JSON.parse(rd.result);
+      if(d && Array.isArray(d.inventory) && Array.isArray(d.projects) && !d.builds){ toast('これは研究デスクのバックアップです。「研究デスクとの連携」から読み込んでください'); return; }
+      if(!d || !d.v || !Array.isArray(d.builds)) throw new Error('形式が違います');
+      if(!confirm('作品 ' + d.builds.length + ' 件を読み込み、いまのデータを置き換えます。よろしいですか？')) return;
+      var files = d.files || {};
+      toast('読み込み中…');
+      FILES.clear().then(function(){
+        return Promise.all(Object.keys(files).map(function(k){ return fetch(files[k]).then(function(r){ return r.blob(); }).then(function(b){ return FILES.put(k, b); }); }));
+      }).then(function(){
+        forgetURLs(); DB = normalize(d); save(); applyTheme(); location.hash = '#/'; render(false); toast('読み込みました');
+      }).catch(function(){ toast('写真の読み込みに失敗しました'); });
+    }catch(err){ toast('読み込めませんでした：' + err.message); }
+  };
+  rd.readAsText(f);
+});
+$('#labFile').addEventListener('change', function(e){
+  var f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try{
+      var d = JSON.parse(rd.result);
+      if(!d || !Array.isArray(d.inventory)) throw new Error('研究デスクのバックアップではありません');
+      setLabCache(d, 'file');
+      render(true); toast('研究デスクの台帳を読み込みました（' + d.inventory.length + ' 品目）');
+    }catch(err){ toast('読み込めませんでした：' + err.message); }
+  };
+  rd.readAsText(f);
+});
+
+function showUsage(){
+  if(!navigator.storage || !navigator.storage.estimate) return;
+  navigator.storage.estimate().then(function(e){
+    var el = $('#usage'); if(el && e.usage != null) el.textContent += ' ・ 写真を含む全体 ' + (e.usage > 1e6 ? (e.usage / 1e6).toFixed(1) + ' MB' : Math.round(e.usage / 1e3) + ' KB');
+  }).catch(function(){});
+}
+function blobToDataURL(b){
+  return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; r.readAsDataURL(b); });
+}
+function csv(rows){
+  return '\ufeff' + rows.map(function(r){
+    return r.map(function(c){ c = c == null ? '' : String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(',');
+  }).join('\r\n');
+}
+function download(name, text, type){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type:type + ';charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function copyText(text, msg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+  }else fallback();
+  function fallback(){
+    var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast(msg); }catch(e){ toast('コピーできませんでした'); }
+    t.remove();
+  }
+}
+
+/* ============================================================
+   サンプル
+   ============================================================ */
+function addSample(){
+  var now = new Date().toISOString();
+  function mk(o){
+    var b = Object.assign({ id:uid(), tags:[], specs:[], bom:[], steps:[], sessions:[], maint:[], logs:[], createdAt:now, updatedAt:now }, o);
+    DB.builds.unshift(b); return b;
+  }
+  function bom(b, list){ list.forEach(function(r){ b.bom.push(newBom({ name:r[0], model:r[1] || '', cat:r[2] || 'その他', role: TOOL_CATS.indexOf(r[2]) >= 0 ? 'tool' : 'part', qty:r[3] || 1, price: r[4] == null ? '' : r[4], state:r[5] || '要購入', shop:r[6] || '' })); }); }
+  function steps(b, list, nDone){ list.forEach(function(s, i){ b.steps.push({ id:uid(), title:s[0], mins:s[1] || '', caution:!!s[2], body:s[3] || '', done: i < nDone, doneDate: i < nDone ? addDays(-(nDone - i) * 3) : '' }); }); }
+
+  var a = mk({ title:'玄関の CO₂・温湿度モニター', kind:'電子工作', status:'稼働中', place:'玄関の靴箱の上', summary:'換気のタイミングがわからないので、CO₂ 濃度が 1000ppm を超えたら LED で知らせる。データは Wi-Fi 経由でスマホでも見られるようにした。', tags:['ESP32','CO2','I2C'], startDate:addDays(-48), doneDate:addDays(-20) });
+  a.specs = [{ k:'電源', v:'USB-C 5V（モバイルバッテリーでも可）' }, { k:'マイコン', v:'ESP32-DevKitC' }, { k:'センサ', v:'SCD41（CO₂）/ BME280（温湿度・気圧）' }, { k:'IP アドレス', v:'192.168.1.42' }, { k:'ファームウェア', v:'v1.3（2週間ごとに OTA 更新）' }];
+  bom(a, [['ESP32-DevKitC', 'ESP32-WROOM-32E', 'マイコン・ボード', 1, 1600, '取り付け済み', '秋月電子'], ['CO₂ センサ', 'SCD41', 'センサ', 1, 6980, '取り付け済み', 'スイッチサイエンス'], ['温湿度センサ', 'BME280', 'センサ', 1, 1080, '取り付け済み', '秋月電子'], ['フルカラー LED', 'WS2812B', '表示・LED', 1, 50, '取り付け済み'], ['ユニバーサル基板', 'C タイプ', '基板・ブレッドボード', 1, 120, '取り付け済み'], ['はんだごて', '', '工具', 1, null, '手元にある'], ['テスター', '', '計測器', 1, null, '手元にある']]);
+  steps(a, [['やりたいことと回路を決める', 30], ['ブレッドボードで試作', 90], ['プログラムを書いて動作確認', 120], ['基板にはんだ付け', 90, true], ['3D プリントのケースに組み込む', 60], ['設置して動作確認', 30]], 6);
+  a.maint.push({ id:uid(), title:'CO₂ センサの校正（屋外で 5 分）', every:180, last:addDays(-20), note:'窓を開けて外気で強制校正', history:[addDays(-20)] });
+  a.maint.push({ id:uid(), title:'ファームウェアの更新を確認', every:30, last:addDays(-25), note:'', history:[addDays(-25)] });
+  a.logs.push({ id:uid(), date:addDays(-20), text:'玄関に設置。朝の家族がそろう時間に 1400ppm まで上がることがわかった。', photos:[], ts:1 });
+  a.logs.push({ id:uid(), date:addDays(-6), text:'しきい値を 1000ppm → 1200ppm に変更。点灯しすぎて気にならなくなっていたので。', photos:[], ts:2 });
+
+  var pc = mk({ title:'メイン PC の組み替え', kind:'自作PC', status:'段取り中', place:'書斎のデスク下', summary:'動画編集が重くなってきたので、CPU・マザーボード・メモリを入れ替える。ケースと電源、SSD は今のものを使い回す。', tags:['AM5','DDR5'], startDate:addDays(-5), targetDate:addDays(18) });
+  pc.specs = [{ k:'CPU', v:'Ryzen 7 9700X' }, { k:'メモリ', v:'DDR5-5600 32GB（16GB×2）' }, { k:'ストレージ', v:'NVMe 1TB（流用）+ SATA 2TB' }, { k:'GPU', v:'RTX 4060（流用）' }, { k:'電源', v:'750W 80PLUS Gold（流用）' }, { k:'BIOS バージョン', v:'' }, { k:'OS', v:'Windows 11 Pro' }];
+  bom(pc, [['CPU', 'Ryzen 7 9700X', 'PCパーツ', 1, 52800, '注文済み', 'ツクモ'], ['マザーボード', 'B650M（Micro-ATX）', 'PCパーツ', 1, 21800, '要購入', 'ツクモ'], ['メモリ', 'DDR5-5600 16GB×2', 'PCパーツ', 1, 13980, '要購入', 'Amazon'], ['CPU クーラー', 'AK400', 'PCパーツ', 1, 3980, '要購入', 'Amazon'], ['グリス', 'MX-6', '材料・消耗品', 1, 980, '要購入'], ['SSD', 'NVMe 1TB（流用）', 'PCパーツ', 1, null, '手元にある'], ['電源ユニット', '750W（流用）', 'PCパーツ', 1, null, '手元にある'], ['プラスドライバー（#2）', '', '工具', 1, null, '手元にある'], ['結束バンド', '', '材料・消耗品', 1, null, '手元にある']]);
+  steps(pc, TEMPLATES['自作PC'].steps.map(function(s){ return [s[0], s[1], s[2]]; }), 1);
+  pc.sessions.push({ id:uid(), date:addDays(9), start:'13:00', end:'17:00', title:'作業：メイン PC の組み替え', note:'・CPU・メモリ・M.2 SSD をマザーボードに取り付け\n・最小構成で起動確認（BIOS が出るか）\n・ケースに組み込んで配線', done:false });
+  pc.maint.push({ id:uid(), title:'ホコリの掃除', every:90, last:'', note:'フロントのフィルターと GPU のファン', history:[] });
+
+  var sh = mk({ title:'洗面所の吊り戸棚', kind:'DIY・木工', status:'製作中', place:'洗面所の洗濯機の上', summary:'洗剤やタオルの置き場が足りないので、洗濯機の上の空間に棚を作る。壁の下地に固定する。', tags:['SPF','オイル仕上げ'], startDate:addDays(-10), targetDate:addDays(6) });
+  sh.specs = [{ k:'寸法（幅×奥行×高さ）', v:'600 × 250 × 400 mm' }, { k:'材料', v:'SPF 1×10 材' }, { k:'耐荷重の目安', v:'10kg（下地 2 か所にビス固定）' }, { k:'塗料', v:'ワトコオイル（ナチュラル）' }];
+  bom(sh, [['SPF 1×10 材', '1820mm', '材料・消耗品', 2, 1480, '手元にある', 'ホームセンター'], ['コーススレッド', '45mm', '材料・消耗品', 1, 398, '手元にある', 'ホームセンター'], ['L 字金具', '75mm', '材料・消耗品', 4, 168, '要購入', 'ホームセンター'], ['ワトコオイル', 'ナチュラル 200ml', '材料・消耗品', 1, 1280, '要購入', 'ホームセンター'], ['下地センサー', '', '計測器', 1, 1980, '要購入', 'ホームセンター'], ['インパクトドライバー', '', '工具', 1, null, '手元にある'], ['メジャー', '', '工具', 1, null, '手元にある']]);
+  steps(sh, [['採寸して図面を描く', 45], ['木取り表を作ってカットしてもらう', 60], ['やすりがけ', 40], ['組み立て', 60], ['オイル塗装・乾燥（1 日）', 30, true], ['壁の下地を探して取り付け', 45, true]], 3);
+  sh.sessions.push({ id:uid(), date:addDays(3), start:'10:00', end:'12:00', title:'作業：吊り戸棚の組み立てと塗装', note:'・組み立て\n・オイル塗装（換気する）', done:false });
+  sh.logs.push({ id:uid(), date:addDays(-4), text:'ホームセンターでカットしてもらった。1 枚 2 カットまで無料。', photos:[], ts:3 });
+  return a;
+}
+
+/* ============================================================
+   起動
+   ============================================================ */
+takeOAuthReturn();
+loadLab();
+rebuildShadow();
+applyTheme();
+render(false);
+if(SYNC.flash) toast(SYNC.flash);
+syncStartup();
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
