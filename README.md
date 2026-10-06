@@ -60,17 +60,18 @@
 設定 →「Google でログイン」で、同じ Google アカウントでログインした端末どうしのデータ（写真も含む）が同期されます。
 
 - 保存先は自分の Google ドライブの **アプリ専用領域**（appDataFolder）。ドライブの画面には表示されません。サーバーは使っていません
-- 研究デスクと **同じ OAuth クライアント** を使うので、アプリ専用領域も研究デスクと共通です。自作デスクのファイルは `maker-desk.json` と写真の `mk-…` で、研究デスクのファイルには書き込みません（`lab-desk.json` を読むだけ）
+- OAuth クライアントは研究デスクと **同じ Google Cloud プロジェクト** の自作デスク専用のものなので、アプリ専用領域も研究デスクと共通です。自作デスクのファイルは `maker-desk.json` と写真の `mk-…` で、研究デスクのファイルには書き込みません（`lab-desk.json` を読むだけ）
 - 作品・部品・手順・作業日・メンテ・記録を **1件ずつ** マージするので、別々の端末で編集しても、同じ項目を同時に書き換えない限り両方の変更が残ります。削除も他の端末に反映されます
 - ログインの有効期限は約1時間です。切れていたら、アプリを開いたときに自動で取り直します
 
-### 最初に一度だけ：リダイレクト URI を追加する
+### OAuth クライアント
 
-研究デスクで作った OAuth クライアント（`1088975026923-gg6ra210…`）を使います。[Google Cloud Console](https://console.cloud.google.com/) の **Google Auth Platform → クライアント** で研究デスクのクライアントを開き、
+研究デスクと同じ Google Cloud プロジェクトに、自作デスク専用のクライアント（`1088975026923-hub0du9f…`）を作り、`index.html` の `GOOGLE_CLIENT_ID` に組み込んであります。クライアントの設定は次のとおりです。
 
-- 承認済みのリダイレクト URI に `https://kuru77.github.io/maker-desk/` を追加して保存
-
-してください（JavaScript 生成元 `https://kuru77.github.io` とスコープ `drive.appdata` は研究デスクの設定のままで使えます）。
+- 種類：ウェブ アプリケーション
+- 承認済みの JavaScript 生成元：`https://kuru77.github.io`
+- 承認済みのリダイレクト URI：`https://kuru77.github.io/maker-desk/`
+- スコープ：`https://www.googleapis.com/auth/drive.appdata`（研究デスクと共通の OAuth 同意画面に登録済み）
 
 ## データの持ち運び
 

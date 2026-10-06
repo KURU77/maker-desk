@@ -1247,13 +1247,14 @@ function lightbox(k){
 
 /* ============================================================
    端末間の同期（Google ドライブのアプリ専用領域）
-   研究デスクと同じ方式・同じ OAuth クライアント。同じクライアントなので
-   アプリ専用領域も研究デスクと共通になり、研究デスクの lab-desk.json を
-   読んで台帳を取り込める（書き換えはしない）。
+   研究デスクと同じ方式。OAuth クライアントは研究デスクと同じ Google Cloud
+   プロジェクトの自作デスク専用のもの。アプリ専用領域はプロジェクト単位なので
+   研究デスクと共通になり、研究デスクの lab-desk.json を読んで台帳を取り込める
+   （書き換えはしない）。
    こちらのファイルは maker-desk.json と、写真の mk-<キー>。
    研究デスクの画像（f-…）には触らない。
    ============================================================ */
-var GOOGLE_CLIENT_ID = '1088975026923-gg6ra210l32ql6g7hllg6i11qei8agm9.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = '1088975026923-hub0du9fe6gli8ll11vngv2hfjqiel65.apps.googleusercontent.com';
 var KIDS = ['bom','steps','sessions','maint','logs'];
 var SHADOW = {};
 
